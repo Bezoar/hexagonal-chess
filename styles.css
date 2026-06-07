@@ -89,24 +89,27 @@ body {
 .spacer { flex:1 1 auto; }
 
 /* ---------- clock (timed games) ---------- */
-.clock { display:flex; align-items:center; justify-content:center; gap:16px; padding:4px 0; }
+/* One large tappable button: clock icon stacked above the running time. */
+.clock { display:flex; justify-content:center; padding:6px 0; }
 .clock[hidden] { display:none; }
-.clock-btn { width:66px; height:66px; flex:none; padding:0; border-radius:50%; cursor:pointer;
+.clock-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  width:100%; max-width:188px; padding:20px 18px 22px; border-radius:22px; cursor:pointer;
   background:var(--panel); border:2px solid var(--panel-edge); color:var(--ink-dim);
-  display:flex; align-items:center; justify-content:center; }
-.clock-btn svg { width:32px; height:32px; fill:none; stroke:currentColor; stroke-width:1.8;
+  box-shadow:0 10px 30px -20px #000; }
+.clock-ic { width:30px; height:30px; fill:none; stroke:currentColor; stroke-width:1.8;
   stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.clock-time { font-family:"Fraunces", serif; font-size:52px; font-weight:600; line-height:1;
+  color:var(--ink); font-variant-numeric:tabular-nums; pointer-events:none; }
 .clock-btn:disabled { cursor:default; }
 .clock-btn:not(:disabled):active { transform:translateY(1px); }
-.clock-time { font-family:"Fraunces", serif; font-size:42px; font-weight:600; line-height:1;
-  color:var(--ink); font-variant-numeric:tabular-nums; min-width:2.6em; text-align:center; }
 .clock.armed .clock-btn { border-color:var(--accent); color:var(--accent-soft); /* pre-game: tap to start */
-  box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent) inset; }
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) inset, 0 10px 30px -20px #000; }
 .clock.active .clock-btn { border-color:var(--accent-soft); color:var(--accent-soft); /* this seat is running */
-  background:color-mix(in srgb, var(--accent) 10%, transparent); }
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent) inset, 0 12px 34px -18px var(--accent); }
 .clock.active .clock-time { color:var(--accent-soft); }
 .clock:not(.active):not(.armed) .clock-time { color:var(--ink-faint); } /* idle seat dimmed */
-.clock:not(.active):not(.armed) .clock-btn { opacity:.7; }
+.clock:not(.active):not(.armed) .clock-btn { opacity:.72; }
 
 .controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .btn { font-size:14.4px; font-weight:600; color:var(--ink); background:var(--panel);
@@ -343,11 +346,11 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
   .gutter.near { order:3; }
   .gutter .legend, .gutter .spacer { display:none; }
   .gutter .status { flex:1 1 auto; }
-  /* compact clock in the row layout */
-  .clock { gap:10px; padding:0; }
-  .clock-btn { width:46px; height:46px; }
-  .clock-btn svg { width:24px; height:24px; }
-  .clock-time { font-size:30px; min-width:2.2em; }
+  /* compact stacked clock in the row layout */
+  .clock { padding:0; }
+  .clock-btn { width:auto; max-width:none; padding:6px 14px; gap:3px; border-radius:14px; }
+  .clock-ic { width:18px; height:18px; }
+  .clock-time { font-size:26px; }
   .gutter .controls { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; margin-left:auto; }
   .gutter .controls .btn { padding:9px 11px; }
   .gutter .prompt { flex-basis:100%; order:5; }
