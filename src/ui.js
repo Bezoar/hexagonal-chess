@@ -161,7 +161,7 @@ class App {
     switch (action) {
       case 'flip': this.flipped = !this.flipped; this.app.classList.toggle('flip', this.flipped); break;
       case 'mute': this._setSound(!this.settings.sound); break;
-      case 'settings': this._openSettings(); break;
+      case 'settings': this._openSettings(seat); break;
       case 'resign':
         if (!this.game.result && this.game.whiteArmy) { this.game.resign(seat); this._postMove({}); }
         break;
@@ -218,7 +218,9 @@ class App {
     this.ui.undoRequester = seat;
     this.ui.undoKeep = this.game.defaultUndoIndex(seat);
     this._renderUndoList();
-    $('#undo').hidden = false;
+    const u = $('#undo');
+    u.classList.toggle('face-far', seat === 'far'); // orient to the requesting seat
+    u.hidden = false;
   }
 
   _pickUndoTarget(keep) { this.ui.undoKeep = keep; this._renderUndoList(); }
@@ -254,10 +256,12 @@ class App {
   }
 
   // ---- settings ----
-  _openSettings() {
+  _openSettings(seat) {
     this._draft = { ...this.settings };
     this._renderSettings();
-    $('#settings').hidden = false;
+    const s = $('#settings');
+    s.classList.toggle('face-far', seat === 'far'); // orient to the opening seat
+    s.hidden = false;
   }
 
   _renderSettings() {
