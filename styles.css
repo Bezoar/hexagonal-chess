@@ -111,8 +111,11 @@ body {
    cell's size (keeps the 1fr track free to shrink in portrait) and its aspect
    ratio can't overflow into the seat bars; preserveAspectRatio fits it inside. */
 svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); height:calc(100% - 20px); overflow:visible; }
-.brand { position:absolute; top:12px; left:50%; transform:translateX(-50%); font-family:"Fraunces", serif;
+/* Faint supertitle — mirrored top/bottom so each player reads it right-side-up. */
+.brand { position:absolute; left:0; right:0; text-align:center; font-family:"Fraunces", serif;
   font-size:13.8px; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-faint); pointer-events:none; }
+.brand.near { top:12px; }
+.brand.far { bottom:12px; transform:rotate(180deg); }
 
 .cell { stroke:var(--cell-stroke); stroke-width:1.1; }
 .cell.t0 { fill:var(--tone-0); } .cell.t1 { fill:var(--tone-1); } .cell.t2 { fill:var(--tone-2); }
