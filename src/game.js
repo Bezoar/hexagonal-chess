@@ -10,6 +10,7 @@ import {
 import {
   legalMoves, applyMoveToBoard, status as posStatus, inCheck, cloneBoard,
 } from './rules.js';
+import { Clock } from './clock.js';
 
 const START = [
   ['K', 'g1', 'near'], ['Q', 'e1', 'near'], ['R', 'c1', 'near'], ['R', 'i1', 'near'],
@@ -42,8 +43,10 @@ function hashPosition(board, toMove, epTarget) {
 }
 
 export class Game {
-  constructor(rules = {}) {
+  // `clockConfig` ({ base, increment } in ms) makes this a timed game; null = untimed.
+  constructor(rules = {}, clockConfig = null) {
     this.rules = { ...DEFAULT_RULES, ...rules };
+    this.clockConfig = clockConfig;
     this.reset();
   }
 
@@ -58,6 +61,7 @@ export class Game {
     this.forward = [];         // undone moves, retained until the next move
     this.positions = new Map();
     this.result = null;        // null | { kind, winner, reason }
+    this.clock = this.clockConfig ? new Clock(this.clockConfig) : null; // null = untimed
     this._count(hashPosition(this.board, this.toMove, this.epTarget));
   }
 
@@ -181,6 +185,25 @@ export class Game {
     this.result = { kind: 'draw', winner: null, reason: 'agreement' };
   }
 
+  // `seat`'s clock has run out. The opponent wins on time — unless the opponent has
+  // no way to mate, which in Gliński's hex chess means only a bare king (a single
+  // knight or bishop CAN mate; see docs/research/timed-games.md), then it is a draw.
+  flag(seat) {
+    if (this.result) return;
+    const winner = opponent(seat);
+    this.result = this._insufficientToMate(winner)
+      ? { kind: 'draw', winner: null, reason: 'timeout-insufficient' }
+      : { kind: 'timeout', winner, reason: 'timeout' };
+  }
+
+  // True when `army` has nothing but its king (cannot checkmate by any sequence).
+  _insufficientToMate(army) {
+    for (const p of this.board.values()) {
+      if (p.army === army && p.type !== 'K') return false;
+    }
+    return true;
+  }
+
   // --- Undo (target-selectable, ADR/spec §9.4) ---
 
   // Default rewind target for a requester: the position immediately before their
@@ -215,6 +238,7 @@ export class Game {
       moves: this.history.map((r) => ({ from: r.from, to: r.to, promo: r.promo })),
       forward: this.forward.map((r) => ({ from: r.from, to: r.to, promo: r.promo })),
       result: this.result,
+      clock: this.clock ? this.clock.serialize() : null,
     };
   }
 
@@ -223,6 +247,10 @@ export class Game {
     for (const mv of data.moves || []) g._apply(mv.from, mv.to, mv.promo);
     g.forward = data.forward || [];
     if (data.result) g.result = data.result;
+    if (data.clock) { // restore the live clock (its base/increment are embedded)
+      g.clock = Clock.fromJSON(data.clock);
+      g.clockConfig = { base: g.clock.base, increment: g.clock.increment };
+    }
     return g;
   }
 }

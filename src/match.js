@@ -11,6 +11,7 @@ export function gameScore(result) {
   switch (result.kind) {
     case 'checkmate':
     case 'resign':
+    case 'timeout': // win on time (a timeout that's a draw carries kind 'draw')
       return { ...z, [result.winner]: 1, [opponent(result.winner)]: 0 };
     case 'stalemate': // result.winner is the stalemating side
       return { ...z, [result.winner]: 0.75, [opponent(result.winner)]: 0.25 };
