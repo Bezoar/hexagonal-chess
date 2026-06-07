@@ -1,0 +1,144 @@
+// render.js — SVG board renderer. Browser-only (keeps the engine DOM-free).
+//
+// The board is drawn once and never flips; orientation is by army (the far army's
+// pieces are rotated 180°) and the whole presentation is flipped for solo play via
+// a CSS class on the app root (Flip view, spec §9.5).
+
+import {
+  CELLS, cellColor, cellPixel, key, parseKey, FILES, fileIndex,
+} from './hex.js';
+import { makePiece } from './pieces.js';
+
+const SVGNS = 'http://www.w3.org/2000/svg';
+const SIZE = 40;
+const ROOT3 = Math.sqrt(3);
+
+const el = (name, attrs = {}) => {
+  const e = document.createElementNS(SVGNS, name);
+  for (const k in attrs) e.setAttribute(k, attrs[k]);
+  return e;
+};
+
+function hexPoints(cx, cy, r) {
+  const p = [];
+  for (let i = 0; i < 6; i++) {
+    const a = (Math.PI / 180) * 60 * i;
+    p.push(`${(cx + r * Math.cos(a)).toFixed(2)},${(cy + r * Math.sin(a)).toFixed(2)}`);
+  }
+  return p.join(' ');
+}
+
+export class Renderer {
+  constructor(svg) {
+    this.svg = svg;
+    this.center = new Map(); // cellKey -> [cx, cy]
+    this._buildStatic();
+    this.layers = {
+      lastmove: el('g'), check: el('g'), targets: el('g'),
+      selection: el('g'), coords: el('g'), pieces: el('g'),
+    };
+    for (const k of ['lastmove', 'check', 'targets', 'selection', 'coords', 'pieces']) {
+      this.svg.appendChild(this.layers[k]);
+    }
+  }
+
+  _buildStatic() {
+    const xs = CELLS.map(([x]) => cellPixel(x, 0, SIZE).px);
+    const ys = CELLS.map(([x, y]) => cellPixel(x, y, SIZE).py);
+    const pad = SIZE * 1.15;
+    const minX = Math.min(...xs) - pad, minY = Math.min(...ys) - pad;
+    const w = Math.max(...xs) - Math.min(...xs) + 2 * pad;
+    const h = Math.max(...ys) - Math.min(...ys) + 2 * pad;
+    this.svg.setAttribute('viewBox', `${minX} ${minY} ${w} ${h}`);
+    const cells = el('g');
+    for (const [x, y] of CELLS) {
+      const { px, py } = cellPixel(x, y, SIZE);
+      this.center.set(key(x, y), [px, py]);
+      cells.appendChild(el('polygon', {
+        points: hexPoints(px, py, SIZE), class: 'cell t' + cellColor(x, y), 'data-key': key(x, y),
+      }));
+    }
+    this.svg.appendChild(cells);
+  }
+
+  // Full redraw of the dynamic layers from game + ui state.
+  draw(game, ui = {}) {
+    const { selected = null, targets = [], showCoords = false } = ui;
+    this._clear();
+
+    // last-move trail
+    const last = game.history[game.history.length - 1];
+    if (last) {
+      for (const k of [last.from, last.to]) {
+        const [cx, cy] = this.center.get(k);
+        this.layers.lastmove.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE), class: 'lastmove' }));
+      }
+    }
+
+    // check indicator on the in-check king
+    const checked = game.checkedArmy && game.checkedArmy();
+    if (checked) {
+      const kk = [...game.board.entries()].find(([, p]) => p.type === 'K' && p.army === checked);
+      if (kk) {
+        const [cx, cy] = this.center.get(kk[0]);
+        this.layers.check.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE), class: 'check-fill' }));
+        this.layers.check.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.82), class: 'check-stroke' }));
+      }
+    }
+
+    // coordinate labels (bottom cell of each file)
+    if (showCoords) {
+      for (const f of FILES) {
+        const x = fileIndex(f);
+        let best = null, bestY = -Infinity;
+        for (const [k, [, cy]] of this.center) {
+          if (parseKey(k)[0] === x && cy > bestY) { bestY = cy; best = k; }
+        }
+        const [cx, cy] = this.center.get(best);
+        const t = el('text', { x: cx, y: cy + SIZE * 0.86, 'text-anchor': 'middle', class: 'coord' });
+        t.textContent = f;
+        this.layers.coords.appendChild(t);
+      }
+    }
+
+    // selection + targets
+    if (selected && this.center.has(selected)) {
+      const [cx, cy] = this.center.get(selected);
+      this.layers.selection.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.9), class: 'sel-fill' }));
+      this.layers.selection.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.86), class: 'sel-stroke' }));
+    }
+    for (const m of targets) {
+      const [cx, cy] = this.center.get(m.to);
+      const cls = m.capture ? 'tgt cap' : 'tgt move';
+      this.layers.targets.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.8), class: cls }));
+      // shape cue (colourblind-safe): dot for a quiet move, ring for a capture
+      this.layers.targets.appendChild(el('circle', {
+        cx, cy, r: m.capture ? SIZE * 0.62 : SIZE * 0.16,
+        class: m.capture ? 'tgt-mark ring' : 'tgt-mark dot',
+      }));
+    }
+
+    // pieces
+    for (const [k, p] of game.board) {
+      const [cx, cy] = this.center.get(k);
+      this.layers.pieces.appendChild(makePiece({
+        type: p.type, role: game.role(p.army), faceFar: p.army === 'far', cx, cy, size: SIZE,
+      }));
+    }
+  }
+
+  _clear() {
+    for (const k of Object.keys(this.layers)) this.layers[k].replaceChildren();
+  }
+
+  // Map a client point to a cell key. Uses elementFromPoint so it stays correct
+  // under any CSS transform (notably the 180° Flip-view rotation on the app root);
+  // only cell polygons are hit-testable (pieces/overlays are pointer-events:none).
+  cellAtPoint(clientX, clientY) {
+    const hit = document.elementFromPoint(clientX, clientY);
+    const cell = hit && hit.closest('[data-key]');
+    return cell ? cell.getAttribute('data-key') : null;
+  }
+}
+
+export { SIZE };

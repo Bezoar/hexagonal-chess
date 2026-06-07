@@ -1,0 +1,15 @@
+{
+  "name": "Gliński's Hexagonal Chess",
+  "short_name": "Hex Chess",
+  "description": "Dual-facing Gliński hexagonal chess for two players sharing one tablet.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#121319",
+  "theme_color": "#121319",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
