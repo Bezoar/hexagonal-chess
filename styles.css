@@ -110,11 +110,8 @@ svg.board { position:relative; width:100%; height:100%; overflow:visible; }
 .sel-stroke { fill:none; stroke:var(--accent); stroke-width:4; stroke-linejoin:round; pointer-events:none; }
 .tgt { fill:none; stroke-width:5.5; stroke-linejoin:round; pointer-events:none; }
 .tgt.move { stroke:var(--move); } .tgt.cap { stroke:var(--capture); }
-.tgt-mark { pointer-events:none; }
-.tgt-mark.dot { fill:var(--move); }
-.tgt-mark.ring { fill:none; stroke:var(--capture); stroke-width:3; }
 @keyframes pulse { 0%,100% { opacity:.4; } 50% { opacity:1; } }
-.tgt, .tgt-mark { animation:pulse 1.5s ease-in-out infinite; }
+.tgt { animation:pulse 1.5s ease-in-out infinite; }
 
 .piece { pointer-events:none; }
 .piece.gliding { transition:transform .2s cubic-bezier(.4,0,.2,1); }
@@ -208,6 +205,6 @@ svg.board { position:relative; width:100%; height:100%; overflow:visible; }
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion:reduce) {
   .app { transition:none; }
-  .tgt, .tgt-mark { animation:none; opacity:.9; }
+  .tgt { animation:none; opacity:.9; }
   .toggle .knob { transition:none; }
 }

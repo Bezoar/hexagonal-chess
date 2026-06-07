@@ -113,11 +113,6 @@ export class Renderer {
       const [cx, cy] = this.center.get(m.to);
       const cls = m.capture ? 'tgt cap' : 'tgt move';
       this.layers.targets.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.8), class: cls }));
-      // shape cue (colourblind-safe): dot for a quiet move, ring for a capture
-      this.layers.targets.appendChild(el('circle', {
-        cx, cy, r: m.capture ? SIZE * 0.62 : SIZE * 0.16,
-        class: m.capture ? 'tgt-mark ring' : 'tgt-mark dot',
-      }));
     }
 
     // pieces
