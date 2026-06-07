@@ -409,7 +409,7 @@ class App {
 
     // Header is the fixed seat identity ("Near seat"/"Far seat"); the role
     // (White/Black) is carried by the status box, so we don't echo it here.
-    set('name', `${SEAT_LABEL[seat]} seat`);
+    set('name', seat === 'near' ? 'Dev branch' : `${SEAT_LABEL[seat]} seat`);
     set('score', formatScore(this.match[seat]));
 
     const mat = this._material();
