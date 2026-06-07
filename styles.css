@@ -258,7 +258,7 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .helpmodal .ctrl .nm { font-weight:600; color:var(--ink); }
 .helpmodal .ctrl .ds { font-size:13.5px; line-height:1.5; color:var(--ink-dim); margin-top:1px; }
 .helpmodal .sw { display:inline-block; width:13px; height:13px; border-radius:50%; vertical-align:-1px; margin:0 2px; }
-.helpmodal .sw.move { background:var(--move); }
+.helpmodal .sw.move { border:2.5px solid var(--move); }
 .helpmodal .sw.cap { border:2.5px solid var(--capture); }
 
 .helpmodal .dl { display:flex; flex-direction:column; gap:13px; }
