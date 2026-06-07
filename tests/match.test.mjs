@@ -7,6 +7,7 @@ test('scoring values: checkmate, resign, stalemate ¾/¼, draw', () => {
   assert.deepEqual(gameScore({ kind: 'resign', winner: 'far' }), { near: 0, far: 1 });
   assert.deepEqual(gameScore({ kind: 'stalemate', winner: 'near' }), { near: 0.75, far: 0.25 });
   assert.deepEqual(gameScore({ kind: 'draw', winner: null }), { near: 0.5, far: 0.5 });
+  assert.deepEqual(gameScore({ kind: 'timeout', winner: 'far' }), { near: 0, far: 1 });
 });
 
 test('match accumulates per-seat totals across games', () => {

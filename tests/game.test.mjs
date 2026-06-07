@@ -109,3 +109,39 @@ test('serialize / deserialize round-trips a game', () => {
   assert.equal(g2.role('near'), 'white');
   assert.deepEqual([...g2.board.keys()].sort(), [...g.board.keys()].sort());
 });
+
+test('flag: opponent wins on time when they still have mating material', () => {
+  const g = new Game(); // full board
+  g.flag('near'); // near's clock fell
+  assert.equal(g.result.kind, 'timeout');
+  assert.equal(g.result.winner, 'far');
+});
+
+test('flag: a draw when the side that did not flag has only a bare king', () => {
+  const g = new Game();
+  for (const [k, p] of [...g.board]) if (p.army === 'near' && p.type !== 'K') g.board.delete(k);
+  g.flag('far'); // far flagged; the would-be winner 'near' is a bare king -> draw
+  assert.equal(g.result.kind, 'draw');
+  assert.equal(g.result.reason, 'timeout-insufficient');
+  assert.equal(g.result.winner, null);
+});
+
+test('flag is ignored once the game already has a result', () => {
+  const g = new Game();
+  g.resign('near'); // far already won
+  g.flag('far');
+  assert.equal(g.result.kind, 'resign');
+});
+
+test('a timed game serializes and restores its clock; untimed is clock:null', () => {
+  const untimed = new Game();
+  assert.equal(untimed.clock, null);
+  assert.equal(untimed.serialize().clock, null);
+
+  const g = new Game({}, { base: 300000, increment: 2000 });
+  g.clock.start('near', 1000);
+  const data = g.serialize();
+  assert.equal(data.clock.base, 300000);
+  const r = Game.deserialize(data);
+  assert.deepEqual(r.clock.serialize(), g.clock.serialize());
+});
