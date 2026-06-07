@@ -30,6 +30,14 @@ export const cubeToSquare = (x, y) => {
   const { file, rank } = cubeToFr(x, y);
   return file + rank;
 };
+
+// Square name presented from White's side of the board. When the White army
+// sits on the far edge we rotate the labels 180° (a point reflection of the
+// board, x,y -> -x,-y), so the far player reads files a–l left-to-right and
+// rank 1 at their near edge — exactly the view a near-White player gets.
+// `farWhite` applies the rotation; otherwise the board-fixed labels are used.
+export const cubeToSquareOriented = (x, y, farWhite) =>
+  (farWhite ? cubeToSquare(-x, -y) : cubeToSquare(x, y));
 export function squareToCube(sq) {
   return frToCube(sq[0], parseInt(sq.slice(1), 10));
 }

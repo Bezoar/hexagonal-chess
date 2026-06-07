@@ -34,6 +34,7 @@ class App {
     this._applyTheme();
     audio.setMuted(!this.settings.sound);
     this._wire();
+    this._initFullscreen();
     this.updateAll();
     if (this.game.result) { this.endHandled = true; this._showEnd(); }
   }
@@ -70,6 +71,9 @@ class App {
       if (tog) this._togglePick(tog);
       const row = e.target.closest('.mrow');
       if (row && !$('#undo').hidden) this._pickUndoTarget(Number(row.dataset.keep));
+      const ht = e.target.closest('[data-help-tab]');
+      if (ht) this._helpTab(ht.dataset.helpTab);
+      if (e.target.id === 'help') $('#help').hidden = true; // tap the backdrop to close
     });
     const board = $('#board');
     board.addEventListener('pointerdown', (e) => this._down(e));
@@ -181,6 +185,9 @@ class App {
       case 'flip': this.flipped = !this.flipped; this.app.classList.toggle('flip', this.flipped); break;
       case 'mute': this._setSound(!this.settings.sound); break;
       case 'settings': this._openSettings(seat); break;
+      case 'help': this._openHelp(seat); break;
+      case 'help-close': $('#help').hidden = true; break;
+      case 'fullscreen': this._toggleFullscreen(); break;
       case 'resign':
         if (!this.game.result && this.game.whiteArmy) { this.game.resign(seat); this._postMove({}); }
         break;
@@ -328,6 +335,46 @@ class App {
     this.updateAll();
   }
 
+  // ---- help / field guide ----
+  _openHelp(seat) {
+    this._helpTab('howto'); // always open on "How to play"
+    const h = $('#help');
+    h.classList.toggle('face-far', seat === 'far'); // orient to the opening seat
+    h.hidden = false;
+  }
+
+  _helpTab(id) {
+    $$('#help .tab').forEach((t) => t.classList.toggle('act', t.dataset.helpTab === id));
+    $$('#help .panel').forEach((p) => { p.hidden = p.dataset.helpPanel !== id; });
+  }
+
+  // ---- fullscreen ----
+  _toggleFullscreen() {
+    const d = document;
+    const el = d.documentElement;
+    try {
+      if (d.fullscreenElement || d.webkitFullscreenElement) {
+        (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+      } else {
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      }
+    } catch { /* not permitted / unsupported */ }
+  }
+
+  _initFullscreen() {
+    const el = document.documentElement;
+    if (!el.requestFullscreen && !el.webkitRequestFullscreen) {
+      $$('[data-action="fullscreen"]').forEach((b) => b.remove()); // unsupported (e.g. iPhone)
+      return;
+    }
+    const sync = () => {
+      const on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      $$('[data-action="fullscreen"]').forEach((b) => b.classList.toggle('on', on));
+    };
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
+  }
+
   // ---- rendering ----
   _drawBoard() {
     this.renderer.draw(this.game, {
@@ -360,8 +407,9 @@ class App {
     const role = this.game.role(seat);
     const set = (bind, val) => { const e = $(`[data-bind="${bind}"]`, g); if (e) e.textContent = val; };
 
-    set('name', role ? ROLE_LABEL[role] : SEAT_LABEL[seat]);
-    set('dot', `${seat} seat`);
+    // Header is the fixed seat identity ("Near seat"/"Far seat"); the role
+    // (White/Black) is carried by the status box, so we don't echo it here.
+    set('name', `${SEAT_LABEL[seat]} seat`);
     set('score', formatScore(this.match[seat]));
 
     const mat = this._material();
@@ -439,7 +487,7 @@ class App {
   }
 
   _hidePrompts() { $$('[data-bind="prompt"]').forEach((p) => (p.hidden = true)); }
-  _anyOverlay() { return !$('#settings').hidden || !$('#undo').hidden || !$('#endcard').hidden; }
+  _anyOverlay() { return !$('#settings').hidden || !$('#undo').hidden || !$('#endcard').hidden || !$('#help').hidden; }
 
   _showEnd() {
     const r = this.game.result;
@@ -467,9 +515,43 @@ class App {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => { window.__app = new App(); });
+// A tablet is a touch device with no mouse hover; anything else (a desktop with a
+// mouse) gets a one-time, dismissible warning that this is a two-player tablet game.
+function checkDevice() {
+  const touch = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+  const noHover = window.matchMedia('(hover: none)').matches;
+  if (touch && noHover) return; // looks like a tablet — all good
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem('dw-dismissed') === '1'; } catch { /* private mode */ }
+  if (dismissed) return;
+  const el = document.getElementById('deviceWarning');
+  if (!el) return;
+  el.hidden = false;
+  const btn = document.getElementById('deviceWarningDismiss');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      el.hidden = true;
+      try { sessionStorage.setItem('dw-dismissed', '1'); } catch { /* ignore */ }
+    });
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => { checkDevice(); window.__app = new App(); });
 
 // Register the service worker for offline / installable use (no-op if unsupported).
+// updateViaCache:'none' makes the browser re-fetch sw.js itself on every update
+// check (not from HTTP cache), so new deploys are noticed promptly. When a new
+// worker takes control of an already-controlled page we reload once so the fresh
+// CSS/JS is shown immediately instead of on a later visit.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => {
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded || !hadController) return; // skip the first-ever install
+      reloaded = true;
+      window.location.reload();
+    });
+  });
 }

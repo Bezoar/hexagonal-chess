@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  CELLS, CELL_KEYS, frToCube, cubeToFr, cubeToSquare, squareToCube,
+  CELLS, CELL_KEYS, frToCube, cubeToFr, cubeToSquare, cubeToSquareOriented, squareToCube,
   cellColor, isOnBoard, KNIGHT, ORTHO, DIAG, fileIndex,
 } from '../src/hex.js';
 
@@ -42,6 +42,18 @@ test('j file is skipped; 11 files', () => {
 test('square <-> cube', () => {
   assert.equal(cubeToSquare(0, 0), 'f6');
   assert.deepEqual(squareToCube('g10'), [1, 4, -5]);
+});
+
+test('cubeToSquareOriented: far-White rotates the board 180° (files + ranks)', () => {
+  const sq = (s) => squareToCube(s).slice(0, 2);
+  // near-White (or no White yet): board-fixed labels
+  assert.equal(cubeToSquareOriented(...sq('g1'), false), 'g1');
+  assert.equal(cubeToSquareOriented(...sq('g10'), false), 'g10');
+  // far-White: 180° point reflection — center fixed, ranks flip AND files reverse
+  assert.equal(cubeToSquareOriented(0, 0, true), 'f6');         // center unchanged
+  assert.equal(cubeToSquareOriented(...sq('g10'), true), 'e1'); // far king's cell reads e1
+  assert.equal(cubeToSquareOriented(...sq('g1'), true), 'e10'); // near king's cell reads e10
+  assert.equal(cubeToSquareOriented(...sq('a1'), true), 'l6');  // file a -> l (files reverse)
 });
 
 test('three cell colors; f6 mid; no edge-adjacent share a color', () => {
