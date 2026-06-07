@@ -330,6 +330,19 @@
 
 <div class="rotate-hint" id="rotateHint" hidden>Rotate your device — or play in either orientation.</div>
 
+<!-- shown when the page is not on a touch tablet (see ui.js checkDevice) -->
+<div class="device-warning" id="deviceWarning" hidden>
+  <div class="dw-card">
+    <div class="dw-eyebrow">Gliński · Hexagonal Chess</div>
+    <div class="dw-title">Made for a tablet</div>
+    <p class="dw-body">This is a <b>two-player</b> game designed for a <b>tablet</b> — both players
+      share one screen, seated across the table from each other, and tap to move. It looks like
+      you're on a device with a mouse, so the dual-facing layout won't feel quite right. You're
+      welcome to look around anyway.</p>
+    <button class="dw-btn" id="deviceWarningDismiss">Continue anyway</button>
+  </div>
+</div>
+
 <script type="module" src="src/ui.js"></script>
 </body>
 </html>

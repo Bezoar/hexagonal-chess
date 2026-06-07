@@ -485,7 +485,28 @@ class App {
   }
 }
 
-window.addEventListener('DOMContentLoaded', () => { window.__app = new App(); });
+// A tablet is a touch device with no mouse hover; anything else (a desktop with a
+// mouse) gets a one-time, dismissible warning that this is a two-player tablet game.
+function checkDevice() {
+  const touch = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
+  const noHover = window.matchMedia('(hover: none)').matches;
+  if (touch && noHover) return; // looks like a tablet — all good
+  let dismissed = false;
+  try { dismissed = sessionStorage.getItem('dw-dismissed') === '1'; } catch { /* private mode */ }
+  if (dismissed) return;
+  const el = document.getElementById('deviceWarning');
+  if (!el) return;
+  el.hidden = false;
+  const btn = document.getElementById('deviceWarningDismiss');
+  if (btn) {
+    btn.addEventListener('click', () => {
+      el.hidden = true;
+      try { sessionStorage.setItem('dw-dismissed', '1'); } catch { /* ignore */ }
+    });
+  }
+}
+
+window.addEventListener('DOMContentLoaded', () => { checkDevice(); window.__app = new App(); });
 
 // Register the service worker for offline / installable use (no-op if unsupported).
 // updateViaCache:'none' makes the browser re-fetch sw.js itself on every update

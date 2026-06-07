@@ -286,6 +286,23 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
   padding:40px; background:var(--bg-0); color:var(--ink-dim); z-index:20; }
 .rotate-hint[hidden] { display:none; }
 
+/* device warning — shown when not on a touch tablet */
+.device-warning { position:fixed; inset:0; z-index:30; display:flex; align-items:center; justify-content:center;
+  padding:32px; background:radial-gradient(120% 80% at 50% 0%, var(--bg-1) 0%, var(--bg-0) 70%); }
+.device-warning[hidden] { display:none; }
+.dw-card { max-width:440px; text-align:center; background:rgba(22,24,32,.98); border:1px solid var(--panel-edge);
+  border-radius:20px; padding:30px 32px 28px;
+  box-shadow:0 40px 100px -30px #000, 0 0 0 1px color-mix(in srgb, var(--accent) 18%, transparent) inset; }
+[data-theme="light"] .dw-card { background:var(--panel); }
+.dw-eyebrow { font-family:"Fraunces",serif; font-size:12px; letter-spacing:.22em; text-transform:uppercase; color:var(--ink-faint); }
+.dw-title { font-family:"Fraunces",serif; font-size:27px; font-weight:600; margin-top:6px; color:var(--accent-soft); }
+.dw-body { font-size:15px; line-height:1.62; color:var(--ink-dim); margin:14px 0 22px; }
+.dw-body b { color:var(--accent-soft); font-weight:600; }
+.dw-btn { font-family:inherit; font-size:15px; font-weight:600; color:#241a08; cursor:pointer;
+  background:linear-gradient(180deg, var(--accent-soft), var(--accent)); border:1px solid var(--accent-soft);
+  border-radius:12px; padding:12px 22px; }
+.dw-btn:active { transform:translateY(1px); }
+
 /* ---------- portrait ---------- */
 @media (orientation:portrait) {
   .app { grid-template-columns:none; grid-template-rows:auto 1fr auto; }
