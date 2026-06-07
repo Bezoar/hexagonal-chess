@@ -197,7 +197,10 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 @media (orientation:portrait) {
   .app { grid-template-columns:none; grid-template-rows:auto 1fr auto; }
   .gutter { flex-direction:row; align-items:center; gap:12px; padding:12px 18px; border-inline:none; border-block:1px solid var(--panel-edge); flex-wrap:wrap; }
-  .gutter.far { transform:rotate(180deg); }
+  /* Each console on the edge nearest its player: far (top, rotated), near (bottom). */
+  .gutter.far { transform:rotate(180deg); order:1; }
+  .board-wrap { order:2; }
+  .gutter.near { order:3; }
   .gutter .legend, .gutter .spacer { display:none; }
   .gutter .status { flex:1 1 auto; }
   .gutter .controls { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; margin-left:auto; }
