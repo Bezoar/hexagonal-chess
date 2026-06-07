@@ -46,8 +46,20 @@ body {
 .seat-name { font-family:"Fraunces", serif; font-weight:600; font-size:20.7px; letter-spacing:.04em; }
 .seat-dot { font-size:11.5px; color:var(--ink-faint); letter-spacing:.16em; text-transform:uppercase; }
 
-.score-card { background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px;
-  padding:11px 14px; display:flex; align-items:center; justify-content:space-between; }
+.score-card { position:relative; background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px;
+  padding:11px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+
+/* captured-pieces pop-out (toggled by tapping the score card). Opens downward in
+   landscape; in portrait it opens "upward" in local coords, which — thanks to the
+   far gutter's 180° rotation — lands toward the board for both seats. */
+.captured-pop { position:absolute; left:0; top:calc(100% + 8px); z-index:8;
+  min-width:160px; max-width:260px; background:var(--panel); border:1px solid var(--accent);
+  border-radius:12px; padding:10px 12px; box-shadow:0 18px 44px -20px #000, 0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent) inset; }
+.captured-pop[hidden] { display:none; }
+.captured-pop .cap-title { font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent-soft); margin-bottom:6px; }
+.captured-pop .cap-row { display:flex; flex-wrap:wrap; gap:5px; font-size:24px; line-height:1; color:var(--ink);
+  font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif; }
+.captured-pop .cap-none { font-size:12.5px; color:var(--ink-dim); }
 .score-num { font-family:"Fraunces", serif; font-size:39.1px; font-weight:600; line-height:1; color:var(--accent-soft); }
 .score-meta { text-align:right; }
 .score-meta .lbl { font-size:11.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-faint); }
@@ -91,11 +103,14 @@ body {
   border-color:var(--accent-soft); font-weight:700; }
 
 /* ---------- board ---------- */
-.board-wrap { position:relative; display:flex; align-items:center; justify-content:center; padding:10px; min-width:0; }
+.board-wrap { position:relative; display:flex; align-items:center; justify-content:center; padding:10px; min-width:0; min-height:0; }
 .board-wrap::before { content:""; position:absolute; inset:6px; border-radius:24px;
   background:radial-gradient(120% 120% at 50% 40%, var(--bg-1) 0%, var(--bg-0) 75%);
   box-shadow:inset 0 1px 0 var(--panel-edge), 0 24px 60px -34px #000; }
-svg.board { position:relative; width:100%; height:100%; overflow:visible; }
+/* Absolutely positioned with explicit dimensions so the board never forces its
+   cell's size (keeps the 1fr track free to shrink in portrait) and its aspect
+   ratio can't overflow into the seat bars; preserveAspectRatio fits it inside. */
+svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); height:calc(100% - 20px); overflow:visible; }
 .brand { position:absolute; top:12px; left:50%; transform:translateX(-50%); font-family:"Fraunces", serif;
   font-size:13.8px; letter-spacing:.28em; text-transform:uppercase; color:var(--ink-faint); pointer-events:none; }
 
@@ -110,13 +125,15 @@ svg.board { position:relative; width:100%; height:100%; overflow:visible; }
 .sel-stroke { fill:none; stroke:var(--accent); stroke-width:4; stroke-linejoin:round; pointer-events:none; }
 .tgt { fill:none; stroke-width:5.5; stroke-linejoin:round; pointer-events:none; }
 .tgt.move { stroke:var(--move); } .tgt.cap { stroke:var(--capture); }
-.tgt-mark { pointer-events:none; }
-.tgt-mark.dot { fill:var(--move); }
-.tgt-mark.ring { fill:none; stroke:var(--capture); stroke-width:3; }
 @keyframes pulse { 0%,100% { opacity:.4; } 50% { opacity:1; } }
-.tgt, .tgt-mark { animation:pulse 1.5s ease-in-out infinite; }
+.tgt { animation:pulse 1.5s ease-in-out infinite; }
 
 .piece { pointer-events:none; }
+.piece.gliding { transition:transform .2s cubic-bezier(.4,0,.2,1); }
+.piece.knight-hop .piece-glyph { animation:knight-hop .22s ease; }
+@keyframes knight-hop { 0%,100% { transform:translateY(0); } 45% { transform:translateY(-16px); } }
+.capture-ghost { animation:capture-fade .24s ease forwards; }
+@keyframes capture-fade { to { opacity:0; } }
 .piece-glyph { font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif;
   paint-order:stroke; }
 .piece.role-white .piece-glyph { fill:var(--white); stroke:var(--white-edge); stroke-width:1.1px; }
@@ -192,17 +209,22 @@ svg.board { position:relative; width:100%; height:100%; overflow:visible; }
 @media (orientation:portrait) {
   .app { grid-template-columns:none; grid-template-rows:auto 1fr auto; }
   .gutter { flex-direction:row; align-items:center; gap:12px; padding:12px 18px; border-inline:none; border-block:1px solid var(--panel-edge); flex-wrap:wrap; }
-  .gutter.far { transform:rotate(180deg); }
+  /* Each console on the edge nearest its player: far (top, rotated), near (bottom). */
+  .gutter.far { transform:rotate(180deg); order:1; }
+  .board-wrap { order:2; }
+  .gutter.near { order:3; }
   .gutter .legend, .gutter .spacer { display:none; }
   .gutter .status { flex:1 1 auto; }
   .gutter .controls { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; margin-left:auto; }
   .gutter .controls .btn { padding:9px 11px; }
   .gutter .prompt { flex-basis:100%; order:5; }
+  /* open the captured pane toward the board (away from the screen edge) */
+  .captured-pop { top:auto; bottom:calc(100% + 8px); }
 }
 
 /* ---------- reduced motion ---------- */
 @media (prefers-reduced-motion:reduce) {
   .app { transition:none; }
-  .tgt, .tgt-mark { animation:none; opacity:.9; }
+  .tgt { animation:none; opacity:.9; }
   .toggle .knob { transition:none; }
 }

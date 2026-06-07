@@ -62,8 +62,10 @@ export class Renderer {
   }
 
   // Full redraw of the dynamic layers from game + ui state.
+  // `ui.animate` (optional) glides the moving piece for one render:
+  //   { from, to, faceFar, isKnight, captureKey, capturedPiece:{type,army,role} }
   draw(game, ui = {}) {
-    const { selected = null, targets = [], showCoords = false } = ui;
+    const { selected = null, targets = [], showCoords = false, animate = null } = ui;
     this._clear();
 
     // last-move trail
@@ -111,19 +113,48 @@ export class Renderer {
       const [cx, cy] = this.center.get(m.to);
       const cls = m.capture ? 'tgt cap' : 'tgt move';
       this.layers.targets.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.8), class: cls }));
-      // shape cue (colourblind-safe): dot for a quiet move, ring for a capture
-      this.layers.targets.appendChild(el('circle', {
-        cx, cy, r: m.capture ? SIZE * 0.62 : SIZE * 0.16,
-        class: m.capture ? 'tgt-mark ring' : 'tgt-mark dot',
-      }));
     }
 
     // pieces
+    let movingEl = null;
     for (const [k, p] of game.board) {
       const [cx, cy] = this.center.get(k);
-      this.layers.pieces.appendChild(makePiece({
+      const pieceEl = makePiece({
         type: p.type, role: game.role(p.army), faceFar: p.army === 'far', cx, cy, size: SIZE,
-      }));
+      });
+      this.layers.pieces.appendChild(pieceEl);
+      if (animate && k === animate.to) movingEl = pieceEl;
+    }
+
+    this._animate(animate, movingEl);
+  }
+
+  // Glide the moving piece from its source, hop knights, fade a captured piece.
+  _animate(animate, movingEl) {
+    if (!animate) return;
+    const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (reduced) return;
+    const rot = animate.faceFar ? ' rotate(180)' : '';
+
+    if (movingEl && this.center.has(animate.from) && this.center.has(animate.to)) {
+      const [fx, fy] = this.center.get(animate.from);
+      const [tx, ty] = this.center.get(animate.to);
+      movingEl.setAttribute('transform', `translate(${fx} ${fy})${rot}`); // start at source
+      movingEl.getBoundingClientRect();                                    // commit (FLIP)
+      movingEl.classList.add('gliding');
+      if (animate.isKnight) movingEl.classList.add('knight-hop');
+      movingEl.setAttribute('transform', `translate(${tx} ${ty})${rot}`); // glide to dest
+    }
+
+    if (animate.captureKey && animate.capturedPiece && this.center.has(animate.captureKey)) {
+      const [gx, gy] = this.center.get(animate.captureKey);
+      const cap = animate.capturedPiece;
+      const ghost = makePiece({
+        type: cap.type, role: cap.role, faceFar: cap.army === 'far', cx: gx, cy: gy, size: SIZE,
+      });
+      ghost.classList.add('capture-ghost');
+      this.layers.pieces.appendChild(ghost);
+      setTimeout(() => ghost.remove(), 240);
     }
   }
 

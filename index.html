@@ -24,7 +24,8 @@
   <aside class="gutter near" data-seat="near">
     <div class="seat-head"><span class="seat-name" data-bind="name">Near</span><span class="seat-dot" data-bind="dot">near seat</span></div>
     <div class="score-card"><div class="score-num" data-bind="score">0</div>
-      <div class="score-meta"><div class="lbl">Match</div><div class="adv" data-bind="adv">—</div></div></div>
+      <div class="score-meta"><div class="lbl">Match</div><div class="adv" data-bind="adv">—</div></div>
+      <div class="captured-pop" data-bind="captured" hidden></div></div>
     <div class="status" data-bind="status">
       <div class="turn" data-bind="turn">New game</div>
       <div class="state" data-bind="state">Move to play White</div>
@@ -41,11 +42,11 @@
     </div>
     <div class="spacer"></div>
     <div class="controls">
-      <button class="btn" data-action="undo" data-seat="near">↶ Undo</button>
-      <button class="btn" data-action="draw" data-seat="near">½ Draw</button>
-      <button class="btn" data-action="flip" data-seat="near">⤿ Flip</button>
-      <button class="btn ghost" data-action="settings" data-seat="near">⚙ Settings</button>
-      <button class="btn danger" data-action="resign" data-seat="near">⚑ Resign</button>
+      <button class="btn" data-action="undo" data-seat="near">↩️ Undo</button>
+      <button class="btn" data-action="draw" data-seat="near">🤝 Draw</button>
+      <button class="btn" data-action="flip" data-seat="near">🔄 Flip</button>
+      <button class="btn ghost" data-action="settings" data-seat="near">⚙️ Settings</button>
+      <button class="btn danger" data-action="resign" data-seat="near">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="near">🔇 Mute</button>
     </div>
   </aside>
@@ -129,7 +130,8 @@
   <aside class="gutter far" data-seat="far">
     <div class="seat-head"><span class="seat-name" data-bind="name">Far</span><span class="seat-dot" data-bind="dot">far seat</span></div>
     <div class="score-card"><div class="score-num" data-bind="score">0</div>
-      <div class="score-meta"><div class="lbl">Match</div><div class="adv" data-bind="adv">—</div></div></div>
+      <div class="score-meta"><div class="lbl">Match</div><div class="adv" data-bind="adv">—</div></div>
+      <div class="captured-pop" data-bind="captured" hidden></div></div>
     <div class="status" data-bind="status">
       <div class="turn" data-bind="turn">New game</div>
       <div class="state" data-bind="state">Move to play White</div>
@@ -146,11 +148,11 @@
     </div>
     <div class="spacer"></div>
     <div class="controls">
-      <button class="btn" data-action="undo" data-seat="far">↶ Undo</button>
-      <button class="btn" data-action="draw" data-seat="far">½ Draw</button>
-      <button class="btn" data-action="flip" data-seat="far">⤿ Flip</button>
-      <button class="btn ghost" data-action="settings" data-seat="far">⚙ Settings</button>
-      <button class="btn danger" data-action="resign" data-seat="far">⚑ Resign</button>
+      <button class="btn" data-action="undo" data-seat="far">↩️ Undo</button>
+      <button class="btn" data-action="draw" data-seat="far">🤝 Draw</button>
+      <button class="btn" data-action="flip" data-seat="far">🔄 Flip</button>
+      <button class="btn ghost" data-action="settings" data-seat="far">⚙️ Settings</button>
+      <button class="btn danger" data-action="resign" data-seat="far">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="far">🔇 Mute</button>
     </div>
   </aside>

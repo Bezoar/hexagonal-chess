@@ -5,6 +5,15 @@ sharing one tablet (the informal name is "double-headed"). The board is rendered
 once and never flips — each army's pieces and each seat's status banner are oriented
 to that player's side, so both read the game upright at the same time.
 
+**▶ [Play it live](https://bezoar.github.io/hexagonal-chess/)**
+
+## Demo
+
+[![Watch the demo](https://img.youtube.com/vi/bgR3yESAEVE/hqdefault.jpg)](https://youtu.be/bgR3yESAEVE)
+
+(GitHub strips video `<iframe>`s from READMEs, so this is the thumbnail-link
+convention — click it to watch on YouTube.)
+
 ## Play
 
 Static site, no build step — open `index.html` directly, or serve the folder

@@ -133,7 +133,8 @@ export class Game {
 
     const record = {
       from: fromKey, to: toKey, promo: m.isPromotion ? (promoType || 'Q') : null,
-      army: piece.army, pieceType: piece.type, captured, san, status: st,
+      army: piece.army, pieceType: piece.type, captured, captureKey: m.captureKey || null,
+      san, status: st,
     };
     this.history.push(record);
     return record;
