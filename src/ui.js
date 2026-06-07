@@ -87,8 +87,14 @@ class App {
     }
     const piece = this.game.board.get(cell);
     if (piece && this.game.selectable().includes(piece.army)) {
-      this._select(cell);
-      this.drag = { from: cell, x: e.clientX, y: e.clientY, moved: false };
+      if (cell === this.ui.selected) {
+        // second tap on the already-selected piece: keep it for a possible drag,
+        // but deselect on tap-up (handled in _up) so the highlights toggle off
+        this.drag = { from: cell, x: e.clientX, y: e.clientY, moved: false, toggle: true };
+      } else {
+        this._select(cell);
+        this.drag = { from: cell, x: e.clientX, y: e.clientY, moved: false };
+      }
     } else {
       this._deselect();
     }
@@ -102,7 +108,10 @@ class App {
   _up(e) {
     if (!this.drag) return;
     const d = this.drag; this.drag = null;
-    if (!d.moved) return; // a tap leaves the selection for tap-tap
+    if (!d.moved) {
+      if (d.toggle) this._deselect(); // second tap on the selected piece clears highlights
+      return; // otherwise a tap leaves the selection for tap-tap
+    }
     const cell = this.renderer.cellAtPoint(e.clientX, e.clientY);
     if (cell && this.ui.targets.some((t) => t.to === cell)) this._attempt(d.from, cell);
   }
