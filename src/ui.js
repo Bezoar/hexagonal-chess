@@ -488,6 +488,19 @@ class App {
 window.addEventListener('DOMContentLoaded', () => { window.__app = new App(); });
 
 // Register the service worker for offline / installable use (no-op if unsupported).
+// updateViaCache:'none' makes the browser re-fetch sw.js itself on every update
+// check (not from HTTP cache), so new deploys are noticed promptly. When a new
+// worker takes control of an already-controlled page we reload once so the fresh
+// CSS/JS is shown immediately instead of on a later visit.
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  window.addEventListener('load', () => {
+    const hadController = !!navigator.serviceWorker.controller;
+    navigator.serviceWorker.register('sw.js', { updateViaCache: 'none' }).catch(() => {});
+    let reloaded = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (reloaded || !hadController) return; // skip the first-ever install
+      reloaded = true;
+      window.location.reload();
+    });
+  });
 }
