@@ -378,7 +378,9 @@ class App {
     const role = this.game.role(seat);
     const set = (bind, val) => { const e = $(`[data-bind="${bind}"]`, g); if (e) e.textContent = val; };
 
-    set('name', role ? ROLE_LABEL[role] : SEAT_LABEL[seat]);
+    // Header is the fixed seat identity (Near/Far); the role (White/Black) is
+    // carried by the status box, so we don't echo it here.
+    set('name', SEAT_LABEL[seat]);
     set('dot', `${seat} seat`);
     set('score', formatScore(this.match[seat]));
 
