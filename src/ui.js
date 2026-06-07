@@ -34,6 +34,7 @@ class App {
     this._applyTheme();
     audio.setMuted(!this.settings.sound);
     this._wire();
+    this._initFullscreen();
     this.updateAll();
     if (this.game.result) { this.endHandled = true; this._showEnd(); }
   }
@@ -186,6 +187,7 @@ class App {
       case 'settings': this._openSettings(seat); break;
       case 'help': this._openHelp(seat); break;
       case 'help-close': $('#help').hidden = true; break;
+      case 'fullscreen': this._toggleFullscreen(); break;
       case 'resign':
         if (!this.game.result && this.game.whiteArmy) { this.game.resign(seat); this._postMove({}); }
         break;
@@ -344,6 +346,33 @@ class App {
   _helpTab(id) {
     $$('#help .tab').forEach((t) => t.classList.toggle('act', t.dataset.helpTab === id));
     $$('#help .panel').forEach((p) => { p.hidden = p.dataset.helpPanel !== id; });
+  }
+
+  // ---- fullscreen ----
+  _toggleFullscreen() {
+    const d = document;
+    const el = d.documentElement;
+    try {
+      if (d.fullscreenElement || d.webkitFullscreenElement) {
+        (d.exitFullscreen || d.webkitExitFullscreen).call(d);
+      } else {
+        (el.requestFullscreen || el.webkitRequestFullscreen).call(el);
+      }
+    } catch { /* not permitted / unsupported */ }
+  }
+
+  _initFullscreen() {
+    const el = document.documentElement;
+    if (!el.requestFullscreen && !el.webkitRequestFullscreen) {
+      $$('[data-action="fullscreen"]').forEach((b) => b.remove()); // unsupported (e.g. iPhone)
+      return;
+    }
+    const sync = () => {
+      const on = !!(document.fullscreenElement || document.webkitFullscreenElement);
+      $$('[data-action="fullscreen"]').forEach((b) => b.classList.toggle('on', on));
+    };
+    document.addEventListener('fullscreenchange', sync);
+    document.addEventListener('webkitfullscreenchange', sync);
   }
 
   // ---- rendering ----

@@ -28,7 +28,9 @@ body {
 
 /* ---------- layout ---------- */
 .app {
-  height:100vh; width:100vw; display:grid;
+  /* dvh tracks the *visible* viewport (excludes the browser toolbars), so the
+     board is never clipped behind Safari's bars; vh is the older fallback. */
+  height:100vh; height:100dvh; width:100vw; width:100dvw; display:grid;
   grid-template-columns:248px 1fr 248px;
   transition:transform .45s cubic-bezier(.4,0,.2,1);
   transform-origin:center;
@@ -204,11 +206,16 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .foot-actions { display:flex; gap:10px; }
 
 /* ---------- help: round "?" trigger + field-guide modal ---------- */
-.help-btn { grid-column:1 / -1; justify-self:center; width:42px; height:42px; padding:0; margin-top:2px;
+/* centered row of round icon buttons (help, fullscreen) under the controls */
+.aux-row { grid-column:1 / -1; justify-self:center; display:flex; gap:10px; margin-top:2px; }
+.help-btn { width:42px; height:42px; padding:0;
   border-radius:50%; font-family:"Fraunces",serif; font-size:23px; font-weight:600; line-height:1;
   color:var(--accent-soft); background:var(--panel); border:1.5px solid var(--accent); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent) inset, 0 8px 24px -14px #000; }
+.help-btn.fs { font-family:"Segoe UI Symbol","Apple Symbols",system-ui,sans-serif; font-size:19px; }
+.help-btn.on { background:linear-gradient(180deg, var(--accent-soft), var(--accent)); color:#241a08; }
+.help-btn[hidden] { display:none; }
 .help-btn:active { transform:translateY(1px); }
 
 .help .helpmodal { position:relative; width:min(500px, 94%); max-height:88%; display:flex; flex-direction:column;
