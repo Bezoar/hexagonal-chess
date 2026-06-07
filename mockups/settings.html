@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hexagonal Chess — Settings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-0:#121319; --bg-1:#171922; --panel:#1b1e28; --panel-edge:#2a2f3d;
+  --tone-0:#333b47; --tone-1:#465264; --tone-2:#5b6a80;
+  --white:#f1e8d6; --white-edge:#3a3528; --black:#23262f; --black-edge:#aab3c4;
+  --accent:#d9a441; --accent-soft:#e7c074; --capture:#e0685f; --move:#5fa8e0;
+  --ink:#ece7dd; --ink-dim:#9aa3b0; --ink-faint:#6c7382;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{background:radial-gradient(120% 80% at 50% 0%, #1c1f2a 0%, var(--bg-0) 60%, #0d0e13 100%);
+  color:var(--ink);font-family:"Hanken Grotesk",sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+.board-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+svg.board{width:74vh;height:74vh;overflow:visible;opacity:.5}
+.cell{stroke:#10121a;stroke-width:1.1}
+.cell.t0{fill:var(--tone-0)} .cell.t1{fill:var(--tone-1)} .cell.t2{fill:var(--tone-2)}
+.piece{font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif;font-size:43px;
+  text-anchor:middle;dominant-baseline:central;paint-order:stroke}
+.piece.w{fill:var(--white);stroke:var(--white-edge);stroke-width:1.1px}
+.piece.b{fill:var(--black);stroke:var(--black-edge);stroke-width:1.3px}
+.scrim{position:absolute;inset:0;background:rgba(8,9,13,.62);backdrop-filter:blur(2px)}
+.modal{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);width:440px;max-height:88vh;overflow:auto;
+  background:rgba(22,24,32,.97);border:1px solid var(--panel-edge);border-radius:20px;
+  box-shadow:0 40px 100px -30px #000,0 0 0 1px rgba(217,164,65,.18) inset;padding:22px 26px 24px}
+.modal h2{font-family:"Fraunces",serif;font-size:25px;font-weight:600;display:flex;justify-content:space-between;align-items:baseline}
+.savednote{font-size:11px;color:var(--ink-faint);letter-spacing:.04em}
+.grp{font-family:"Fraunces",serif;font-size:12px;letter-spacing:.12em;color:var(--accent-soft);
+  margin:18px 0 2px;text-transform:uppercase}
+.row{display:flex;align-items:center;justify-content:space-between;padding:11px 0;border-bottom:1px solid #232733;gap:14px}
+.grp + .row{border-top:1px solid #232733}
+.row .lab{font-size:14px;color:var(--ink)}
+.row .sub{font-size:11px;color:var(--ink-faint);margin-top:2px;max-width:250px}
+.toggle{width:44px;height:26px;border-radius:13px;background:#2a2f3d;position:relative;border:1px solid #343a48;flex:none}
+.toggle.on{background:linear-gradient(180deg,#e0b25a,#c8923a);border-color:#e7c074}
+.toggle .knob{position:absolute;top:2px;left:2px;width:20px;height:20px;border-radius:50%;background:#0e0f15}
+.toggle.on .knob{left:20px;background:#241a08}
+.seg{display:inline-flex;background:#15171f;border:1px solid #2a2f3d;border-radius:10px;overflow:hidden;flex:none}
+.seg button{padding:7px 13px;font-size:12.5px;font-weight:600;color:var(--ink-dim);background:transparent;border:none;cursor:pointer}
+.seg button.act{background:linear-gradient(180deg,#e0b25a,#c8923a);color:#241a08}
+.modal-foot{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
+.btn{font-size:13px;font-weight:700;border-radius:11px;padding:10px 20px;cursor:pointer;border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink)}
+.btn.primary{background:linear-gradient(180deg,#e0b25a,#c8923a);color:#241a08;border-color:#e7c074}
+.foot-note{font-size:11px;color:var(--ink-faint)}
+</style>
+</head>
+<body>
+<div class="board-bg"><svg class="board" id="board"></svg></div>
+<div class="scrim"></div>
+
+<div class="modal">
+  <h2>Settings <span class="savednote">saved automatically</span></h2>
+
+  <div class="grp">Rules</div>
+  <div class="row">
+    <div><div class="lab">Stalemate scoring</div><div class="sub">Gliński scores stalemate ¾ to the stalemating side, ¼ to the stalemated side.</div></div>
+    <div class="seg"><button class="act">Gliński ¾–¼</button><button>Draw</button></div>
+  </div>
+  <div class="row"><div><div class="lab">Threefold repetition</div><div class="sub">Auto-draw when the same position occurs three times.</div></div>
+    <div class="toggle on"><div class="knob"></div></div></div>
+  <div class="row"><div><div class="lab">50-move rule</div><div class="sub">Auto-draw after 50 moves with no capture or pawn move.</div></div>
+    <div class="toggle on"><div class="knob"></div></div></div>
+
+  <div class="grp">Requests</div>
+  <div class="row"><div><div class="lab">Request / Accept Draw</div><div class="sub">Show the Draw button; ends drawn only if the opponent accepts.</div></div>
+    <div class="toggle on"><div class="knob"></div></div></div>
+  <div class="row"><div><div class="lab">Request / Accept Undo</div><div class="sub">Show the Undo button; rewinds to before the requester's last move on accept.</div></div>
+    <div class="toggle on"><div class="knob"></div></div></div>
+
+  <div class="grp">Display &amp; Sound</div>
+  <div class="row"><div><div class="lab">Theme</div></div>
+    <div class="seg"><button class="act">Dark</button><button>Light</button></div></div>
+  <div class="row"><div><div class="lab">Coordinate labels</div><div class="sub">Show file letters and rank numbers along the board edge.</div></div>
+    <div class="toggle on"><div class="knob"></div></div></div>
+  <div class="row"><div><div class="lab">Sound</div><div class="sub">Move, capture and check cues.</div></div>
+    <div class="toggle on"><div class="knob"></div></div></div>
+
+  <div class="modal-foot">
+    <span class="foot-note">Preferences persist across games &amp; sessions</span>
+    <button class="btn primary">Done</button>
+  </div>
+</div>
+
+<script type="module">
+const SIZE=40, ROOT3=Math.sqrt(3);
+const FILES=['a','b','c','d','e','f','g','h','i','k','l'];
+const fi=f=>FILES.indexOf(f)-5, min0=x=>Math.min(0,x);
+const frToCube=(f,r)=>{const x=fi(f);const y=r-6-min0(x);return [x,y,-x-y];};
+const cells=[];for(let x=-5;x<=5;x++)for(let y=-5;y<=5;y++){const z=-x-y;if(Math.abs(z)<=5)cells.push([x,y,z]);}
+const px=x=>SIZE*1.5*x, py=(x,y)=>-SIZE*ROOT3*(y+x/2), tone=(x,y)=>((x-y)%3+3)%3;
+const xs=cells.map(c=>px(c[0])), ys=cells.map(c=>py(c[0],c[1])), pad=SIZE*1.15;
+const svg=document.getElementById('board');
+svg.setAttribute('viewBox',`${Math.min(...xs)-pad} ${Math.min(...ys)-pad} ${Math.max(...xs)-Math.min(...xs)+2*pad} ${Math.max(...ys)-Math.min(...ys)+2*pad}`);
+const NS='http://www.w3.org/2000/svg', key=(x,y)=>x+','+y, center={};
+const hexPts=(cx,cy,r=SIZE)=>{let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*60*i;p.push(`${(cx+r*Math.cos(a)).toFixed(2)},${(cy+r*Math.sin(a)).toFixed(2)}`);}return p.join(' ');};
+const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
+for(const [x,y] of cells){const cx=px(x),cy=py(x,y);center[key(x,y)]=[cx,cy];mk('polygon',{points:hexPts(cx,cy),class:'cell t'+tone(x,y)});}
+const sq=s=>frToCube(s[0],parseInt(s.slice(1)));
+const W={g1:'K',e1:'Q',c1:'R',i1:'R',d1:'N',h1:'N',f1:'B',f2:'B',f3:'B',b1:'P',c2:'P',d3:'P',e4:'P',f5:'P',g4:'P',h3:'P',i2:'P',k1:'P'};
+const B={g10:'K',e10:'Q',c8:'R',i8:'R',d9:'N',h9:'N',f9:'B',f10:'B',f11:'B',b7:'P',c7:'P',d7:'P',e7:'P',f7:'P',g7:'P',h7:'P',i7:'P',k7:'P'};
+const G={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
+const place=(m,c,far)=>{for(const s in m){const cu=sq(s);const [cx,cy]=center[key(cu[0],cu[1])];const t=mk('text',{x:cx,y:cy,class:'piece '+c});t.textContent=G[m[s]];if(far)t.setAttribute('transform',`rotate(180 ${cx} ${cy})`);}};
+place(W,'w',false);place(B,'b',true);
+</script>
+</body>
+</html>
