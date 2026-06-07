@@ -1,0 +1,81 @@
+name: PR Preview
+
+# Deploys each pull request to its own Cloudflare Pages preview URL and comments
+# the link on the PR, leaving the production site (GitHub Pages, from main) alone.
+#
+# One-time setup (this job stays dormant — green with steps skipped — until done):
+#   1. Create a Cloudflare Pages project named "hexagonal-chess" (Direct Upload).
+#   2. Create a Cloudflare API token with the "Account › Cloudflare Pages › Edit"
+#      permission, and note your Account ID.
+#   3. Add two repo secrets: CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write   # to post/update the preview-URL comment
+
+# One preview per PR; newest push wins.
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  preview:
+    # Same-repo PRs only — fork PRs can't read the Cloudflare secrets.
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+
+      # Stay dormant until the Cloudflare secrets are configured, so PRs don't fail.
+      - name: Check Cloudflare config
+        id: cfg
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          if [ -n "$TOKEN" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Cloudflare secrets not set — skipping preview deploy." >&2
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Deploy to Cloudflare Pages
+        id: deploy
+        if: steps.cfg.outputs.ready == 'true'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: >-
+            pages deploy . --project-name=hexagonal-chess
+            --branch=${{ github.head_ref }} --commit-dirty=true
+
+      - name: Comment preview URL
+        if: steps.cfg.outputs.ready == 'true'
+        uses: actions/github-script@v7
+        env:
+          ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+          DEPLOY_URL: ${{ steps.deploy.outputs.deployment-url }}
+        with:
+          script: |
+            const url = process.env.ALIAS_URL || process.env.DEPLOY_URL;
+            const marker = '<!-- pr-preview -->';
+            const sha = context.sha.slice(0, 7);
+            const body = `${marker}\n⚡ **Preview deployed:** ${url}\n\n_Built from ${sha} — redeploys on every push to this PR._`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body,
+              });
+            }
