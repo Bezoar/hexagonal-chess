@@ -1,0 +1,31 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;height:100%;background:#15171d}
+  svg{display:block;width:100vw;height:100vh}
+  text{font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif;}
+</style></head>
+<body>
+<svg id="ico" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg"></svg>
+<script>
+const NS='http://www.w3.org/2000/svg';
+const svg=document.getElementById('ico');
+const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);return e;};
+// background (full-bleed for maskable safety)
+const bg=mk('rect',{width:512,height:512,fill:'#15171d'});
+svg.appendChild(bg);
+const grad=mk('radialGradient',{id:'g',cx:'50%',cy:'34%',r:'70%'});
+grad.appendChild(mk('stop',{offset:'0%','stop-color':'#20242f'}));
+grad.appendChild(mk('stop',{offset:'100%','stop-color':'#121319'}));
+const defs=mk('defs',{});defs.appendChild(grad);svg.appendChild(defs);
+svg.appendChild(mk('rect',{width:512,height:512,fill:'url(#g)'}));
+// point-up hexagon, centered, with safe padding (content within ~70%)
+const cx=256,cy=256,r=168;
+let pts=[];
+for(let i=0;i<6;i++){const a=Math.PI/180*(-90+60*i);pts.push(`${(cx+r*Math.cos(a)).toFixed(1)},${(cy+r*Math.sin(a)).toFixed(1)}`);}
+svg.appendChild(mk('polygon',{points:pts.join(' '),fill:'#1d2330',stroke:'#d9a441','stroke-width':16,'stroke-linejoin':'round'}));
+// queen glyph
+const t=mk('text',{x:cx,y:cy+10,'text-anchor':'middle','dominant-baseline':'central','font-size':210,fill:'#f1e8d6',stroke:'#3a3528','stroke-width':3,'paint-order':'stroke'});
+t.textContent='♛';
+svg.appendChild(t);
+</script>
+</body></html>

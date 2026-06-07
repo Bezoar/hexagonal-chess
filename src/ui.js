@@ -437,3 +437,8 @@ class App {
 }
 
 window.addEventListener('DOMContentLoaded', () => { window.__app = new App(); });
+
+// Register the service worker for offline / installable use (no-op if unsupported).
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
