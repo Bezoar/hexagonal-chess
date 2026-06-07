@@ -126,6 +126,15 @@ class App {
     if (this.game.checkedArmy()) audio.play('check');
     else audio.play(rec.captured ? 'capture' : 'move');
     this.ui.selected = null; this.ui.targets = []; this.ui.request = null;
+    if (rec.from) {
+      this._pendingAnim = {
+        from: rec.from, to: rec.to, faceFar: rec.army === 'far', isKnight: rec.pieceType === 'N',
+        captureKey: rec.captureKey || null,
+        capturedPiece: rec.captured
+          ? { type: rec.captured.type, army: rec.captured.army, role: this.game.role(rec.captured.army) }
+          : null,
+      };
+    }
     this._hidePrompts();
     this.updateAll();
     if (this.game.result && !this.endHandled) this._endGame();
@@ -313,7 +322,9 @@ class App {
   _drawBoard() {
     this.renderer.draw(this.game, {
       selected: this.ui.selected, targets: this.ui.targets, showCoords: this.settings.coords,
+      animate: this._pendingAnim || null,
     });
+    this._pendingAnim = null; // animate only the render right after a move
   }
 
   updateAll() {
