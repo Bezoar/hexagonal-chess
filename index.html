@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Gliński's Hexagonal Chess</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app" id="app" data-theme="dark">
+
+  <!-- NEAR seat -->
+  <aside class="gutter near" data-seat="near">
+    <div class="seat-head"><span class="seat-name" data-bind="name">Near</span><span class="seat-dot" data-bind="dot">near seat</span></div>
+    <div class="score-card"><div class="score-num" data-bind="score">0</div>
+      <div class="score-meta"><div class="lbl">Match</div><div class="adv" data-bind="adv">—</div></div></div>
+    <div class="status" data-bind="status">
+      <div class="turn" data-bind="turn">New game</div>
+      <div class="state" data-bind="state">Move to play White</div>
+      <div class="last" data-bind="last">first move claims White</div>
+    </div>
+    <div class="prompt" data-bind="prompt" hidden>
+      <div class="t" data-bind="prompt-title">Request</div>
+      <div class="acts"><button class="btn" data-action="decline" data-seat="near">Decline</button>
+        <button class="btn accept" data-action="accept" data-seat="near">Accept</button></div>
+    </div>
+    <div class="legend">
+      <span class="chip"><span class="mk move"></span>move</span>
+      <span class="chip"><span class="mk cap"></span>capture</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="controls">
+      <button class="btn" data-action="undo" data-seat="near">↶ Undo</button>
+      <button class="btn" data-action="draw" data-seat="near">½ Draw</button>
+      <button class="btn" data-action="flip" data-seat="near">⤿ Flip</button>
+      <button class="btn ghost" data-action="settings" data-seat="near">⚙ Settings</button>
+      <button class="btn danger" data-action="resign" data-seat="near">⚑ Resign</button>
+      <button class="btn mute" data-action="mute" data-seat="near">🔇 Mute</button>
+    </div>
+  </aside>
+
+  <!-- BOARD -->
+  <div class="board-wrap">
+    <div class="brand">Gliński · Hexagonal Chess</div>
+    <svg class="board" id="board" aria-label="Hexagonal chess board"></svg>
+
+    <!-- promotion picker -->
+    <div class="overlay promo" id="promo" hidden>
+      <div class="card">
+        <div class="ttl">Promote</div>
+        <div class="opts">
+          <button class="opt" data-action="promote" data-piece="Q"><span class="g">♛</span><span class="n">Queen</span></button>
+          <button class="opt" data-action="promote" data-piece="R"><span class="g">♜</span><span class="n">Rook</span></button>
+          <button class="opt" data-action="promote" data-piece="B"><span class="g">♝</span><span class="n">Bishop</span></button>
+          <button class="opt" data-action="promote" data-piece="N"><span class="g">♞</span><span class="n">Knight</span></button>
+        </div>
+      </div>
+    </div>
+
+    <!-- game over -->
+    <div class="overlay endcard" id="endcard" hidden>
+      <div class="card">
+        <div class="endhalf top">
+          <div class="kick" data-bind="end-kick"></div>
+          <div class="main" data-bind="end-main"></div>
+          <div class="endbtns"><button class="btn primary" data-action="new-game">New Game</button>
+            <button class="btn" data-action="new-match">New Match</button></div>
+        </div>
+        <div class="endhalf bottom">
+          <div class="kick" data-bind="end-kick"></div>
+          <div class="main" data-bind="end-main"></div>
+          <div class="endbtns"><button class="btn primary" data-action="new-game">New Game</button>
+            <button class="btn" data-action="new-match">New Match</button></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- undo / move-history picker -->
+    <div class="overlay undo" id="undo" hidden>
+      <div class="histpanel">
+        <h3>Move history</h3>
+        <div class="hint" id="undo-hint">Tap a point to rewind to</div>
+        <div class="mlist" id="mlist"></div>
+        <div class="histfoot">
+          <button class="btn" data-action="undo-cancel">Cancel</button>
+          <button class="btn accept" data-action="undo-request">Request →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- settings -->
+    <div class="overlay settings" id="settings" hidden>
+      <div class="modal">
+        <h2>Settings <span class="savednote">changes apply on Save</span></h2>
+        <div class="grp">Rules</div>
+        <div class="row"><div><div class="lab">Stalemate scoring</div><div class="sub">Gliński scores stalemate ¾ / ¼.</div></div>
+          <div class="seg" data-set="stalemateAsDraw"><button data-val="false">Gliński ¾–¼</button><button data-val="true">Draw</button></div></div>
+        <div class="row"><div><div class="lab">Threefold repetition</div></div><div class="toggle" data-set="threefold"><div class="knob"></div></div></div>
+        <div class="row"><div><div class="lab">50-move rule</div></div><div class="toggle" data-set="fiftyMove"><div class="knob"></div></div></div>
+        <div class="grp">Requests</div>
+        <div class="row"><div><div class="lab">Request / Accept Draw</div></div><div class="toggle" data-set="requestDraw"><div class="knob"></div></div></div>
+        <div class="row"><div><div class="lab">Request / Accept Undo</div></div><div class="toggle" data-set="requestUndo"><div class="knob"></div></div></div>
+        <div class="grp">Display &amp; Sound</div>
+        <div class="row"><div><div class="lab">Theme</div></div>
+          <div class="seg" data-set="theme"><button data-val="dark">Dark</button><button data-val="light">Light</button></div></div>
+        <div class="row"><div><div class="lab">Coordinate labels</div></div><div class="toggle" data-set="coords"><div class="knob"></div></div></div>
+        <div class="row"><div><div class="lab">Sound</div></div><div class="toggle" data-set="sound"><div class="knob"></div></div></div>
+        <div class="modal-foot">
+          <button class="btn reset" data-action="settings-reset">Reset to default</button>
+          <div class="foot-actions"><button class="btn" data-action="settings-cancel">Cancel</button>
+            <button class="btn primary" data-action="settings-save">Save</button></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAR seat -->
+  <aside class="gutter far" data-seat="far">
+    <div class="seat-head"><span class="seat-name" data-bind="name">Far</span><span class="seat-dot" data-bind="dot">far seat</span></div>
+    <div class="score-card"><div class="score-num" data-bind="score">0</div>
+      <div class="score-meta"><div class="lbl">Match</div><div class="adv" data-bind="adv">—</div></div></div>
+    <div class="status" data-bind="status">
+      <div class="turn" data-bind="turn">New game</div>
+      <div class="state" data-bind="state">Move to play White</div>
+      <div class="last" data-bind="last">first move claims White</div>
+    </div>
+    <div class="prompt" data-bind="prompt" hidden>
+      <div class="t" data-bind="prompt-title">Request</div>
+      <div class="acts"><button class="btn" data-action="decline" data-seat="far">Decline</button>
+        <button class="btn accept" data-action="accept" data-seat="far">Accept</button></div>
+    </div>
+    <div class="legend">
+      <span class="chip"><span class="mk move"></span>move</span>
+      <span class="chip"><span class="mk cap"></span>capture</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="controls">
+      <button class="btn" data-action="undo" data-seat="far">↶ Undo</button>
+      <button class="btn" data-action="draw" data-seat="far">½ Draw</button>
+      <button class="btn" data-action="flip" data-seat="far">⤿ Flip</button>
+      <button class="btn ghost" data-action="settings" data-seat="far">⚙ Settings</button>
+      <button class="btn danger" data-action="resign" data-seat="far">⚑ Resign</button>
+      <button class="btn mute" data-action="mute" data-seat="far">🔇 Mute</button>
+    </div>
+  </aside>
+</div>
+
+<div class="rotate-hint" id="rotateHint" hidden>Rotate your device — or play in either orientation.</div>
+
+<script type="module" src="src/ui.js"></script>
+</body>
+</html>
