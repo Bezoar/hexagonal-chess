@@ -49,6 +49,8 @@ svg.board{width:74vh;height:74vh;overflow:visible;opacity:.5}
 .modal-foot{display:flex;justify-content:space-between;align-items:center;margin-top:22px}
 .btn{font-size:13px;font-weight:700;border-radius:11px;padding:10px 20px;cursor:pointer;border:1px solid var(--panel-edge);background:var(--panel);color:var(--ink)}
 .btn.primary{background:linear-gradient(180deg,#e0b25a,#c8923a);color:#241a08;border-color:#e7c074}
+.btn.reset{background:transparent;color:var(--ink-dim);font-weight:600}
+.foot-actions{display:flex;gap:10px}
 .foot-note{font-size:11px;color:var(--ink-faint)}
 </style>
 </head>
@@ -57,7 +59,7 @@ svg.board{width:74vh;height:74vh;overflow:visible;opacity:.5}
 <div class="scrim"></div>
 
 <div class="modal">
-  <h2>Settings <span class="savednote">saved automatically</span></h2>
+  <h2>Settings <span class="savednote">changes apply on Save</span></h2>
 
   <div class="grp">Rules</div>
   <div class="row">
@@ -84,8 +86,11 @@ svg.board{width:74vh;height:74vh;overflow:visible;opacity:.5}
     <div class="toggle on"><div class="knob"></div></div></div>
 
   <div class="modal-foot">
-    <span class="foot-note">Preferences persist across games &amp; sessions</span>
-    <button class="btn primary">Done</button>
+    <button class="btn reset">Reset to default</button>
+    <div class="foot-actions">
+      <button class="btn">Cancel</button>
+      <button class="btn primary">Save</button>
+    </div>
   </div>
 </div>
 

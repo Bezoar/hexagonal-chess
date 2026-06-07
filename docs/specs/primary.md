@@ -303,14 +303,20 @@ state-changing Undo). The final position stays explorable behind the result card
 ## 10. Settings (persisted) & persistence model
 
 **Settings** is the dialog of persisted, reusable preferences and game options
-(mockup: `mockups/settings.png`). It saves automatically and is reused across
-sessions. Contents:
+(mockup: `mockups/settings.png`). Contents:
 
 - **Rules:** stalemate scoring (Gliński ¾–¼ | Draw); threefold repetition (on/off);
   50-move rule (on/off).
 - **Requests:** Request/Accept Draw (on/off); Request/Accept Undo (on/off).
 - **Display & Sound:** theme (Dark default | Light); coordinate labels (on/off);
   sound (on/off).
+
+**Footer / commit model:** the dialog uses explicit commit, **not** auto-save.
+Edits are staged while the dialog is open and applied only on **Save** (persisted
+and reflected in the live game); **Cancel** discards staged edits and closes
+without changing anything; **Reset to default** restores all options to their
+defaults (still staged — the user must Save to keep them, or Cancel to abandon).
+Saved settings are reused across sessions.
 
 ### 10.1 Persistence (local storage)
 Three independently-persisted stores, restored on load:

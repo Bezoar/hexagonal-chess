@@ -91,11 +91,14 @@ _Avoid_: treating White as a fixed seat or a fixed piece-art color.
 The dialog of persisted, reusable preferences and game options: the auto draw
 conditions (threefold repetition, 50-move rule), the Request-Draw and Request-Undo
 feature toggles, the stalemate-scoring rule (Gliński ¾/¼ vs treat-as-draw),
-coordinate-label visibility, sound mute, and theme (dark by default). Saved to
-local storage and reused across sessions. (Insufficient-material auto-draw is
+coordinate-label visibility, sound mute, and theme (dark by default). Uses an
+**explicit commit model**: edits apply only on **Save** (persisted to local storage
+and reused across sessions), **Cancel** discards them, and **Reset to default**
+stages the default values (still requiring Save). (Insufficient-material auto-draw is
 deferred from v1 — dead positions use Request Draw.) The board's size is the
 priority; Settings live behind a control and must not crowd the board.
-_Avoid_: config (informal); do NOT conflate per-game rules with the live game state.
+_Avoid_: config (informal); auto-save (Settings commits on Save); do NOT conflate
+per-game rules with the live game state.
 
 **Live game state**:
 The full serializable state of the game in progress — piece placement, move
