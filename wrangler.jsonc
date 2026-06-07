@@ -1,0 +1,11 @@
+{
+  // Cloudflare Workers static-assets config. This is a no-build static site, so
+  // there's no Worker script (no "main") — wrangler just serves the repo's files
+  // as assets. `wrangler deploy` (run by the Cloudflare Git integration) needs
+  // this to know what to publish; `directory: "."` serves index.html at the root.
+  "name": "hexagonal-chess",
+  "compatibility_date": "2026-06-07",
+  "assets": {
+    "directory": "."
+  }
+}
