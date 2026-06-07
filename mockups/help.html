@@ -60,6 +60,8 @@ body{background:radial-gradient(120% 80% at 50% 0%, #1c1f2a 0%, var(--bg-0) 60%,
 .sec p:last-child{margin-bottom:0}
 .sec b{color:var(--accent-soft);font-weight:600}
 .lead{font-size:15px;line-height:1.6;color:var(--ink-dim);margin-bottom:18px}
+.helpmodal a{color:var(--accent-soft);text-decoration:underline;text-underline-offset:2px;
+  text-decoration-color:color-mix(in srgb, var(--accent) 55%, transparent)}
 
 /* piece-movement table */
 .moves{display:flex;flex-direction:column;gap:1px;background:var(--panel-edge);
@@ -133,7 +135,7 @@ body{background:radial-gradient(120% 80% at 50% 0%, #1c1f2a 0%, var(--bg-0) 60%,
 
   <!-- HOW TO PLAY -->
   <div class="help-body panel" data-panel="howto">
-    <p class="lead">Gliński's hexagonal chess is played on 91 hexes across eleven files
+    <p class="lead"><a href="https://en.wikipedia.org/wiki/Hexagonal_chess#Gli%C5%84ski's_hexagonal_chess" target="_blank" rel="noopener noreferrer">Władysław Gliński</a>'s hexagonal chess is played on 91 hexes across eleven files
       (<b>a–l</b>, skipping <b>j</b>). Each army has 18 men. The goal is the same as
       chess: deliver <b>checkmate</b> to the enemy King.</p>
 

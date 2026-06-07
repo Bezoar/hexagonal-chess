@@ -244,6 +244,9 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .help-body { padding:20px 24px 24px; overflow:auto; flex:1 1 auto; }
 .helpmodal .panel[hidden] { display:none; }
 .helpmodal .lead { font-size:15px; line-height:1.6; color:var(--ink-dim); margin-bottom:18px; }
+.helpmodal a { color:var(--accent-soft); text-decoration:underline; text-underline-offset:2px;
+  text-decoration-color:color-mix(in srgb, var(--accent) 55%, transparent); }
+.helpmodal a:active { color:var(--accent); }
 .helpmodal .lead b, .helpmodal .sec b, .helpmodal .dd b { color:var(--accent-soft); font-weight:600; }
 .helpmodal .sec { margin-bottom:18px; }
 .helpmodal .sec:last-child { margin-bottom:2px; }
