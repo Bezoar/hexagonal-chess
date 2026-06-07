@@ -22,6 +22,16 @@ test("Fool's mate ends in checkmate; first mover is White; notation is correct",
   assert.equal(recs[6].san, 'Qc3xBf9#');       // capture keeps the captured-piece letter
 });
 
+test('far moves first: notation is oriented to White (the far army)', () => {
+  const g = new Game();
+  // The far army's mirror of near's 1.Qe1c3 — from White's view it reads identically.
+  const rec = g.move(K('e10'), K('c6'));
+  assert.ok(rec && !rec.needsPromotion, 'far queen opening is legal');
+  assert.equal(g.role('far'), 'white');  // first mover claims White
+  assert.equal(g.role('near'), 'black');
+  assert.equal(rec.san, 'Qe1c3');        // White-relative notation, not the board-fixed Qe10c6
+});
+
 test('en passant: capture lands on the skipped cell and removes the passing pawn', () => {
   const g = new Game();
   g.board = new Map([

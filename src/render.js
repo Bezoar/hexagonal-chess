@@ -5,7 +5,7 @@
 // a CSS class on the app root (Flip view, spec §9.5).
 
 import {
-  CELLS, cellColor, cellPixel, key, parseKey, cubeToSquare,
+  CELLS, cellColor, cellPixel, key, parseKey, cubeToSquareOriented,
 } from './hex.js';
 import { makePiece } from './pieces.js';
 
@@ -92,8 +92,9 @@ export class Renderer {
     // with a 180°-rotated copy so each player reads their own (dual-facing).
     if (showCoords) {
       const dx = SIZE * 0.52, dy = SIZE * 0.60;
+      const farWhite = game.whiteArmy === 'far'; // orient labels to White's home edge
       for (const [k, [cx, cy]] of this.center) {
-        const sq = cubeToSquare(...parseKey(k));
+        const sq = cubeToSquareOriented(...parseKey(k), farWhite);
         const near = el('text', { x: cx + dx, y: cy + dy, 'text-anchor': 'end', class: 'coord' });
         near.textContent = sq;
         this.layers.coords.appendChild(near);

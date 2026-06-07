@@ -30,6 +30,13 @@ export const cubeToSquare = (x, y) => {
   const { file, rank } = cubeToFr(x, y);
   return file + rank;
 };
+
+// Square name oriented to White's home edge. The two armies are horizontal
+// mirrors of each other (a y<->z swap, since z = -x-y), so when the White army
+// sits on the far edge we mirror the rank — White's home then reads as rank 1,
+// matching standard chess. Files (columns) are unchanged. `farWhite` applies it.
+export const cubeToSquareOriented = (x, y, farWhite) =>
+  (farWhite ? cubeToSquare(x, -x - y) : cubeToSquare(x, y));
 export function squareToCube(sq) {
   return frToCube(sq[0], parseInt(sq.slice(1), 10));
 }

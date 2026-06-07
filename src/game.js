@@ -5,7 +5,7 @@
 // either army may move. Movement direction is by army, never by role.
 
 import {
-  key, squareToCube, cubeToSquare, parseKey, opponent, pawnForward, add,
+  key, squareToCube, cubeToSquareOriented, parseKey, opponent, pawnForward, add,
 } from './hex.js';
 import {
   legalMoves, applyMoveToBoard, status as posStatus, inCheck, cloneBoard,
@@ -156,8 +156,9 @@ export class Game {
 
   // Long-algebraic with retained captured-piece letter (spec §14).
   _san(piece, m, captured, promoType, st) {
-    const from = cubeToSquare(...parseKey(m.from));
-    const to = cubeToSquare(...parseKey(m.to));
+    const farWhite = this.whiteArmy === 'far'; // notation oriented to White's home edge
+    const from = cubeToSquareOriented(...parseKey(m.from), farWhite);
+    const to = cubeToSquareOriented(...parseKey(m.to), farWhite);
     const lead = piece.type === 'P' ? '' : piece.type;
     let s = lead + from;
     if (m.capture) s += 'x' + (captured ? captured.type : 'P') + to;
