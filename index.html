@@ -41,6 +41,13 @@
       <span class="chip"><span class="mk cap"></span>capture</span>
     </div>
     <div class="spacer"></div>
+    <div class="clock" data-bind="clock" hidden>
+      <button class="clock-btn" data-action="clock" data-seat="near" aria-label="Clock — tap to start">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M12 13l3 2M9 2h6"/></svg>
+      </button>
+      <div class="clock-time" data-bind="clock-time">5:00</div>
+    </div>
+    <div class="spacer"></div>
     <div class="controls">
       <button class="btn" data-action="undo" data-seat="near">↩️ Undo</button>
       <button class="btn" data-action="draw" data-seat="near">🤝 Draw</button>
@@ -116,6 +123,9 @@
           <div class="seg" data-set="stalemateAsDraw"><button data-val="false">Gliński ¾–¼</button><button data-val="true">Draw</button></div></div>
         <div class="row"><div><div class="lab">Threefold repetition</div></div><div class="toggle" data-set="threefold"><div class="knob"></div></div></div>
         <div class="row"><div><div class="lab">50-move rule</div></div><div class="toggle" data-set="fiftyMove"><div class="knob"></div></div></div>
+        <div class="grp">Clock</div>
+        <div class="row"><div><div class="lab">Time control</div><div class="sub">A chess clock per player; applies to a new game. Tap your clock to start.</div></div>
+          <div class="seg" data-set="clockPreset"><button data-val="off">Off</button><button data-val="5+0">5 min</button><button data-val="10+0">10 min</button></div></div>
         <div class="grp">Requests</div>
         <div class="row"><div><div class="lab">Request / Accept Draw</div></div><div class="toggle" data-set="requestDraw"><div class="knob"></div></div></div>
         <div class="row"><div><div class="lab">Request / Accept Undo</div></div><div class="toggle" data-set="requestUndo"><div class="knob"></div></div></div>
@@ -319,6 +329,13 @@
     <div class="legend">
       <span class="chip"><span class="mk move"></span>move</span>
       <span class="chip"><span class="mk cap"></span>capture</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="clock" data-bind="clock" hidden>
+      <button class="clock-btn" data-action="clock" data-seat="far" aria-label="Clock — tap to start">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M12 13l3 2M9 2h6"/></svg>
+      </button>
+      <div class="clock-time" data-bind="clock-time">5:00</div>
     </div>
     <div class="spacer"></div>
     <div class="controls">
