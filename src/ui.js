@@ -9,6 +9,7 @@ import * as audio from './audio.js';
 import { opponent } from './hex.js';
 
 const VALUE = { Q: 9, R: 5, B: 3, N: 3, P: 1, K: 0 };
+const GLYPHS = { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' };
 const ROLE_LABEL = { white: 'White', black: 'Black' };
 const SEAT_LABEL = { near: 'Near', far: 'Far' };
 const DRAG_THRESHOLD = 8;
@@ -61,8 +62,8 @@ class App {
     this.app.addEventListener('click', (e) => {
       const b = e.target.closest('[data-action]');
       if (b) { audio.unlock(); this._action(b.dataset.action, b.dataset.seat, b); }
-      const adv = e.target.closest('.adv');
-      if (adv) this._toggleAdv(adv.closest('.gutter').dataset.seat);
+      const sc = e.target.closest('.score-card');
+      if (sc && !e.target.closest('.captured-pop')) this._toggleAdv(sc.closest('.gutter').dataset.seat);
       const seg = e.target.closest('.seg button');
       if (seg) this._segPick(seg);
       const tog = e.target.closest('.toggle');
@@ -365,12 +366,17 @@ class App {
 
     const mat = this._material();
     const lead = mat[seat] - mat[opponent(seat)];
-    const advEl = $('[data-bind="adv"]', g);
+    $('[data-bind="adv"]', g).textContent = lead > 0 ? `+${lead}` : '—';
+
+    // captured-pieces pop-out
+    const pop = $('[data-bind="captured"]', g);
     if (this.ui.advExpanded === seat) {
-      const caps = this._capturedBy(seat).map((t) => ({ Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' }[t])).join(' ');
-      advEl.textContent = caps || 'none';
+      const caps = this._capturedBy(seat).sort((a, b) => VALUE[b] - VALUE[a]).map((t) => GLYPHS[t]).join('');
+      pop.innerHTML = `<div class="cap-title">Captured${lead > 0 ? ` · +${lead}` : ''}</div>`
+        + (caps ? `<div class="cap-row">${caps}</div>` : '<div class="cap-none">No captures yet</div>');
+      pop.hidden = false;
     } else {
-      advEl.textContent = lead > 0 ? `+${lead}` : '—';
+      pop.hidden = true;
     }
 
     // status
@@ -456,7 +462,8 @@ class App {
 
   _toggleAdv(seat) {
     this.ui.advExpanded = this.ui.advExpanded === seat ? null : seat;
-    this._updateGutter(seat);
+    this._updateGutter('near');
+    this._updateGutter('far');
   }
 }
 
