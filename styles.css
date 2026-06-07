@@ -213,7 +213,7 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
   color:var(--accent-soft); background:var(--panel); border:1.5px solid var(--accent); cursor:pointer;
   display:flex; align-items:center; justify-content:center;
   box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 15%, transparent) inset, 0 8px 24px -14px #000; }
-.help-btn.fs { font-family:"Segoe UI Symbol","Apple Symbols",system-ui,sans-serif; font-size:19px; padding-top:2px; }
+.help-btn.fs { font-family:"Segoe UI Symbol","Apple Symbols",system-ui,sans-serif; font-size:19px; padding-top:3px; }
 .help-btn.on { background:linear-gradient(180deg, var(--accent-soft), var(--accent)); color:#241a08; }
 .help-btn[hidden] { display:none; }
 .help-btn:active { transform:translateY(1px); }
