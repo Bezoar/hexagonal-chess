@@ -48,6 +48,7 @@
       <button class="btn ghost" data-action="settings" data-seat="near">⚙️ Settings</button>
       <button class="btn danger" data-action="resign" data-seat="near">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="near">🔇 Mute</button>
+      <button class="help-btn" data-action="help" data-seat="near" aria-label="How to play and controls">?</button>
     </div>
   </aside>
 
@@ -124,6 +125,173 @@
         </div>
       </div>
     </div>
+
+    <!-- help / field guide -->
+    <div class="overlay help" id="help" hidden>
+      <div class="helpmodal">
+        <div class="help-head">
+          <div class="help-eyebrow">Gliński · Hexagonal Chess</div>
+          <div class="help-title">Field guide</div>
+          <button class="help-close" data-action="help-close" aria-label="Close">✕</button>
+          <div class="tabs">
+            <button class="tab act" data-help-tab="howto"><span class="ic">♟</span>How to play</button>
+            <button class="tab" data-help-tab="controls"><span class="ic">⚙</span>Controls</button>
+          </div>
+        </div>
+
+        <!-- HOW TO PLAY -->
+        <div class="help-body panel" data-help-panel="howto">
+          <p class="lead">Gliński's hexagonal chess is played on 91 hexes across eleven files
+            (<b>a–l</b>, skipping <b>j</b>). Each army has 18 men. The goal is the same as
+            chess: deliver <b>checkmate</b> to the enemy King.</p>
+
+          <div class="sec">
+            <h3>The board</h3>
+            <p>Three shades of hex tile the field. The board never turns — your army always
+              sits on the edge nearest you, and pieces always advance <b>toward your opponent</b>.</p>
+          </div>
+
+          <div class="sec">
+            <h3>The army &amp; how it moves</h3>
+            <div class="moves">
+              <div class="mv"><div class="pc">♚</div><div><span class="nm">King · ×1</span>
+                <span class="ds">One hex in any of the 12 directions. Cannot move into check.</span></div></div>
+              <div class="mv"><div class="pc">♛</div><div><span class="nm">Queen · ×1</span>
+                <span class="ds">Any distance as a Rook or Bishop — the most powerful piece.</span></div></div>
+              <div class="mv"><div class="pc">♜</div><div><span class="nm">Rook · ×2</span>
+                <span class="ds">Any distance along the 6 edge directions (through the flat sides).</span></div></div>
+              <div class="mv"><div class="pc">♝</div><div><span class="nm">Bishop · ×3</span>
+                <span class="ds">Any distance along the 6 diagonals; each stays on its own colour.</span></div></div>
+              <div class="mv"><div class="pc">♞</div><div><span class="nm">Knight · ×2</span>
+                <span class="ds">Leaps to the nearest hexes that are neither a Rook nor Bishop line — up to 12 targets. Jumps over anything.</span></div></div>
+              <div class="mv"><div class="pc">♟</div><div><span class="nm">Pawn · ×9</span>
+                <span class="ds">Steps straight forward; captures one hex diagonally forward.</span></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Pawns in detail</h3>
+            <p>Each of the nine pawns may step <b>two hexes</b> on its first move, and captures
+              only on the two forward-diagonal hexes. <b>En passant</b> applies. A pawn reaching
+              the far edge of its file <b>promotes</b> to Queen, Rook, Bishop, or Knight.</p>
+          </div>
+
+          <div class="sec">
+            <h3>Check &amp; checkmate</h3>
+            <p>A King attacked by an enemy piece is in <b>check</b> and must be made safe on the
+              very next move — by moving the King, blocking the line, or capturing the attacker.
+              If no legal move ends the check it is <b>checkmate</b> and that player loses the game.
+              There is <b>no castling</b> in Gliński's chess.</p>
+            <div class="callout">After every move the app looks at the player about to move and asks
+              two questions: <b>are they in check?</b> and <b>do they have any legal reply?</b> Those
+              two answers decide check, checkmate, and stalemate below.</div>
+          </div>
+
+          <div class="sec">
+            <h3>Stalemate</h3>
+            <p>If the player to move is <b>not in check</b> but has <b>no legal move at all</b>, the
+              position is <b>stalemate</b>. Unlike ordinary chess, Gliński's rules treat it as a
+              near-win rather than a plain draw — and you can choose which:</p>
+            <div class="dl">
+              <div>
+                <div class="dt"><span class="nm">Gliński scoring</span>
+                  <span class="tag">Settings ▸ Stalemate scoring ▸ Gliński ¾–¼</span></div>
+                <div class="dd">The player who delivered the stalemate scores <b class="score">¾</b> of a
+                  point; the stalemated player scores <b class="score">¼</b>. This is the default.</div>
+              </div>
+              <div>
+                <div class="dt"><span class="nm">Plain draw</span>
+                  <span class="tag">Settings ▸ Stalemate scoring ▸ Draw</span></div>
+                <div class="dd">Stalemate counts as an ordinary <b class="score">½–½</b> draw, as in
+                  standard chess.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Draws</h3>
+            <p>A game can also be drawn in three ways. The two automatic conditions are each
+              <b>switched on by default</b> but can be turned off in Settings — when a check is off,
+              the app never declares that draw, and play simply continues.</p>
+            <div class="dl">
+              <div>
+                <div class="dt"><span class="nm">Threefold repetition</span>
+                  <span class="tag">Settings ▸ Threefold repetition</span></div>
+                <div class="dd">If the <b>exact same position</b> occurs three times — the same pieces
+                  on the same hexes, the same player to move, <b>and</b> the same en-passant
+                  possibility — the game is drawn. Turn the toggle off to disable the check entirely.</div>
+              </div>
+              <div>
+                <div class="dt"><span class="nm">50-move rule</span>
+                  <span class="tag">Settings ▸ 50-move rule</span></div>
+                <div class="dd">If <b>50 moves by each side</b> (100 plies) pass with <b>no capture and
+                  no pawn move</b>, the game is drawn. The counter resets to zero the instant any pawn
+                  advances or any piece is captured. Turn the toggle off to disable it.</div>
+              </div>
+              <div>
+                <div class="dt"><span class="nm">Agreement</span>
+                  <span class="tag">Settings ▸ Request / Accept Draw</span></div>
+                <div class="dd">Either player may offer a draw with the <b>🤝 Draw</b> button; the game
+                  is drawn if the opponent accepts. Disable this toggle to hide the offer flow.</div>
+              </div>
+            </div>
+            <div class="callout">There is <b>no</b> automatic insufficient-material or dead-position
+              draw — a King-vs-King ending is settled by agreement or by the 50-move rule.</div>
+          </div>
+
+          <div class="sec">
+            <h3>Resigning</h3>
+            <p>At any time a player may concede with the <b>🏳️ Resign</b> button, awarding the full
+              point and the game to their opponent.</p>
+          </div>
+        </div>
+
+        <!-- CONTROLS -->
+        <div class="help-body panel" data-help-panel="controls" hidden>
+          <p class="lead">One board, two players, one device. Each side has its own console on
+            the edge nearest them — the board stays put while you both read it right-side-up.</p>
+
+          <div class="sec">
+            <h3>Making a move</h3>
+            <div class="ctrls">
+              <div class="ctrl"><div class="ico">☝︎</div><div><span class="nm">Tap a piece</span>
+                <div class="ds">Legal destinations light up: <span class="sw move"></span> a quiet move,
+                  <span class="sw cap"></span> a capture. Tap the piece again to deselect.</div></div></div>
+              <div class="ctrl"><div class="ico">⬡</div><div><span class="nm">Tap a target</span>
+                <div class="ds">The piece glides there. Captures, en passant, and promotion are all handled for you.</div></div></div>
+              <div class="ctrl"><div class="ico">♛</div><div><span class="nm">First move claims White</span>
+                <div class="ds">Whoever moves first plays White; the opponent's army recolours to Black.</div></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>The buttons</h3>
+            <div class="ctrls">
+              <div class="ctrl"><div class="ico">↩️</div><div><span class="nm">Undo</span>
+                <div class="ds">Open the move history and request a rewind to any earlier point.</div></div></div>
+              <div class="ctrl"><div class="ico">🤝</div><div><span class="nm">Draw</span>
+                <div class="ds">Offer a draw; your opponent accepts or declines on their side.</div></div></div>
+              <div class="ctrl"><div class="ico">🔄</div><div><span class="nm">Flip</span>
+                <div class="ds">Rotate the whole view 180° — handy when one person plays both sides.</div></div></div>
+              <div class="ctrl"><div class="ico">⚙️</div><div><span class="nm">Settings</span>
+                <div class="ds">Rules, theme, coordinate labels, and sound. The panel faces whoever opened it.</div></div></div>
+              <div class="ctrl"><div class="ico">🏳️</div><div><span class="nm">Resign</span>
+                <div class="ds">Concede the game and award the win to your opponent.</div></div></div>
+              <div class="ctrl"><div class="ico">🔇</div><div><span class="nm">Mute</span>
+                <div class="ds">Silence move and capture sounds.</div></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Score &amp; captures</h3>
+            <p>Tap your <b>score card</b> to pop out the pieces you've captured and your material
+              lead. The big number is games won in this match.</p>
+            <div class="callout"><b>Tip:</b> the brass highlight trails the last move, and the King's
+              hex glows red when it's in check.</div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- FAR seat -->
@@ -154,6 +322,7 @@
       <button class="btn ghost" data-action="settings" data-seat="far">⚙️ Settings</button>
       <button class="btn danger" data-action="resign" data-seat="far">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="far">🔇 Mute</button>
+      <button class="help-btn" data-action="help" data-seat="far" aria-label="How to play and controls">?</button>
     </div>
   </aside>
 </div>

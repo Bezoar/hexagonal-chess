@@ -70,6 +70,9 @@ class App {
       if (tog) this._togglePick(tog);
       const row = e.target.closest('.mrow');
       if (row && !$('#undo').hidden) this._pickUndoTarget(Number(row.dataset.keep));
+      const ht = e.target.closest('[data-help-tab]');
+      if (ht) this._helpTab(ht.dataset.helpTab);
+      if (e.target.id === 'help') $('#help').hidden = true; // tap the backdrop to close
     });
     const board = $('#board');
     board.addEventListener('pointerdown', (e) => this._down(e));
@@ -181,6 +184,8 @@ class App {
       case 'flip': this.flipped = !this.flipped; this.app.classList.toggle('flip', this.flipped); break;
       case 'mute': this._setSound(!this.settings.sound); break;
       case 'settings': this._openSettings(seat); break;
+      case 'help': this._openHelp(seat); break;
+      case 'help-close': $('#help').hidden = true; break;
       case 'resign':
         if (!this.game.result && this.game.whiteArmy) { this.game.resign(seat); this._postMove({}); }
         break;
@@ -328,6 +333,19 @@ class App {
     this.updateAll();
   }
 
+  // ---- help / field guide ----
+  _openHelp(seat) {
+    this._helpTab('howto'); // always open on "How to play"
+    const h = $('#help');
+    h.classList.toggle('face-far', seat === 'far'); // orient to the opening seat
+    h.hidden = false;
+  }
+
+  _helpTab(id) {
+    $$('#help .tab').forEach((t) => t.classList.toggle('act', t.dataset.helpTab === id));
+    $$('#help .panel').forEach((p) => { p.hidden = p.dataset.helpPanel !== id; });
+  }
+
   // ---- rendering ----
   _drawBoard() {
     this.renderer.draw(this.game, {
@@ -439,7 +457,7 @@ class App {
   }
 
   _hidePrompts() { $$('[data-bind="prompt"]').forEach((p) => (p.hidden = true)); }
-  _anyOverlay() { return !$('#settings').hidden || !$('#undo').hidden || !$('#endcard').hidden; }
+  _anyOverlay() { return !$('#settings').hidden || !$('#undo').hidden || !$('#endcard').hidden || !$('#help').hidden; }
 
   _showEnd() {
     const r = this.game.result;
