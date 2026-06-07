@@ -8,7 +8,8 @@ side of the iPad), never to a color: each seat's gutter always shows that seat's
 cumulative total, and the totals never move even as the White role alternates from
 game to game. A game's result accrues to the seat that held the relevant role.
 
-We chose this over fixing colors to seats (near = always White). Fixing colors gives
+We chose this over fixing colors to seats — e.g. making the near seat always White,
+which we rejected. Fixing colors gives
 the near player the first-move advantage every game; alternating colors on a fixed
 board would otherwise force a player's army to start on the far edge (reaching across
 the table), breaking the ergonomics that let the board stay unflipped (ADR-0001).

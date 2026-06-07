@@ -12,15 +12,22 @@ pieces per side (adding a third bishop and a ninth pawn to the orthodox army).
 _Avoid_: "hex chess" unqualified (other variants exist — McCooey, Shafran).
 
 **Army**:
-One player's full set of 18 pieces (1 K, 1 Q, 2 R, 2 N, 3 B, 9 P). There is a
-White army and a Black army.
-_Avoid_: side, team.
+One player's full set of 18 pieces (1 K, 1 Q, 2 R, 2 N, 3 B, 9 P), identified by
+its **home edge** — the **near army** and the **far army**. The home edge is fixed;
+the army's color/role (White or Black) is **not** — it is decided each game at the
+first move (see **White / Black (role)**). In the opening both armies render White.
+_Avoid_: side, team; "the White army" / "the Black army" as fixed identities.
 
 **Seat**:
-A physical position at the table — the **near** seat (closest edge of the iPad)
-and the **far** seat (opposite edge). White plays from the near seat, Black from
-the far seat. Distinct from army only conceptually; in v1 a seat owns one army.
-_Avoid_: position (overloaded with board position), player slot.
+A physical position at the table — the **near** seat (closest edge of the iPad) and
+the **far** seat (opposite edge). Each seat owns the army on **its** edge for the
+whole match (the near seat plays the near army, the far seat the far army), and that
+never changes. A seat's **color/role is not fixed**: White is whichever seat — near
+or far — makes the first move of the game, so either seat may be White in any given
+game. Players keep their seats across games, which is what keeps the match
+scoreboard coherent.
+_Avoid_: position (overloaded with board position), player slot; do NOT equate the
+near seat with White.
 
 **Dual-facing**:
 The presentation technique where the board is rendered once and never flips, but
@@ -71,7 +78,8 @@ _Avoid_: rotate board, switch sides (it does not change sides or roles).
 **Match**:
 A sequence of games played in one session between the same two seats. A running
 **scoreboard** accumulates points across games (win = 1, draw = ½ each, Gliński
-stalemate = ¾ to the stalemating side / ¼ to the stalemated side). The score is
+stalemate = ¾ to the stalemating side / ¼ to the stalemated side, or ½–½ if the
+"treat stalemate as draw" Setting is enabled). The score is
 **anchored to the seat** (the physical side of the iPad), not to a color: each
 seat's gutter always shows that seat's cumulative total, and it never moves.
 Because seats never move, the per-seat score stays coherent even as the White
@@ -109,10 +117,14 @@ _Avoid_: saved game (the deferred multi-slot feature), board state (ambiguous).
 
 ## Example dialogue
 
-> **Dev:** When Black promotes a pawn, which way does the promotion picker face?
-> **Designer:** Toward the far seat — it's Black's choice, and Black sits at the
-> far edge, so the picker is rotated 180° like the rest of Black's army and the
-> top banner.
+> **Dev:** When the far player promotes a pawn, which way does the promotion
+> picker face?
+> **Designer:** Toward the far seat — the picker faces whichever *seat* is
+> promoting, not a fixed colour. If the far seat is promoting, it's rotated 180°
+> like the rest of the far army and the top banner.
+> **Dev:** And if the far player were White this game?
+> **Designer:** Same thing — orientation follows the seat, the White/Black role
+> doesn't change which way anything faces. The picker still faces the far seat.
 > **Dev:** And the board itself doesn't rotate for that?
 > **Designer:** Right. The board is dual-facing — it never flips. Only army
 > pieces and the seat's banner are oriented; cells and highlights stay shared.

@@ -77,7 +77,7 @@ For **solo practice**, a **Flip view** control rotates the *entire* presentation
   files** (flat-top cells — every cell has a neighbor directly above and below).
 - **11 files** lettered `a b c d e f g h i k l` — **`j` is skipped**. File heights:
   `a6 b7 c8 d9 e10 f11 g10 h9 i8 k7 l6`. Ranks 1..N per file, **rank 1 at the
-  near/White-home end**. `6×11 + (9+7+5+3+1) = 91`.
+  near edge (the near army's home end)**. `6×11 + (9+7+5+3+1) = 91`.
 - **Three cell colors** (light / mid / dark); no two edge-adjacent cells share a
   color; center `f6` is mid-tone.
 
@@ -102,8 +102,8 @@ z = -x - y
 file = fileLetter(x)
 rank = y + 6 + min(0, x)
 ```
-(Verified: f6→(0,0,0); white pawns b1..k1 reproduce the chevron; e4+NE=f5 matching
-the Wikipedia pawn-capture example; black king g10=(1,4,-5).)
+(Verified: f6→(0,0,0); near-army pawns b1..k1 reproduce the chevron; e4+NE=f5
+matching the Wikipedia pawn-capture example; far-army king g10=(1,4,-5).)
 
 **Cell color (3 classes):** `color = ((x - y) % 3 + 3) % 3`. Orthogonal steps change
 it; diagonal steps preserve it (the bishop color-lock).
@@ -112,7 +112,7 @@ it; diagonal steps preserve it (the bishop color-lock).
 
 ```
 px = SIZE * 1.5 * x
-py = -SIZE * √3 * (y + x/2)      // negated so White/near is at the bottom edge
+py = -SIZE * √3 * (y + x/2)      // negated so the near army (rank 1) sits at the bottom edge
 ```
 Hex cell polygon: vertices at angles `0°,60°,…,300°` (flat top/bottom, points
 left/right). The viewBox is the min/max of cell centers padded by ~1.15·SIZE.
@@ -152,8 +152,9 @@ Piece **art color is decided at the first move**, not fixed to a seat. See
   side-to-move's pieces are selectable.
 
 Piece art is a **pluggable interface**: v1 ships a clean, open-licensed silhouette
-set (e.g. Cburnett, CC-BY-SA) with the Black army rotated 180° per the dual-facing
-rule; the interface allows swapping in bespoke/directional art later without
+set (e.g. Cburnett, CC-BY-SA) with the far army rotated 180° per the dual-facing
+rule (rotation follows the seat/home edge, not the role); the interface allows
+swapping in bespoke/directional art later without
 touching engine or layout code. (Final art is SVG; mockups use Unicode glyphs as
 placeholders.)
 
@@ -170,18 +171,20 @@ Identical to orthodox chess **except** as noted. Verified against Wikipedia
 - **Queen** — rook + bishop (all 12 directions).
 - **King** — one cell, orthogonal or diagonal. **No castling.**
 - **Knight** — two cells orthogonally then one orthogonally at a 60° turn; **jumps**.
-  = any nearest cell not on an orthogonal or diagonal line through its square →
+  = any nearest cell not on an orthogonal or diagonal line through its cell →
   **12 destinations**.
-- **Pawn:**
-  - Moves **one vacant cell straight forward up its file** (White toward the far
-    border, Black toward the near border).
-  - **Double-step** two vacant cells forward if it stands on **any of its own color's
+- **Pawn:** (forward direction is fixed by the pawn's **army / home edge**, not by
+  the White/Black role — the near army always advances toward the far border, the
+  far army toward the near border, whichever side is White this game).
+  - Moves **one vacant cell straight forward up its file** away from its home edge
+    (near army ascending rank, far army descending rank).
+  - **Double-step** two vacant cells forward if it stands on **any of its own army's
     nine starting cells** (not only its origin) — a pawn that captured sideways onto
     another start-file regains the double-step.
   - **Captures one cell diagonally forward** — the two *orthogonal* edges 60° off
     vertical (forward-left / forward-right). Never captures straight ahead.
-  - **En passant:** yes (e.g. Black `c7→c5`, then White `b5` plays `b5xc6`, landing on
-    the skipped cell).
+  - **En passant:** yes (e.g. a far-army pawn `c7→c5`, then an adjacent near-army
+    pawn on `b5` plays `b5xPc6 e.p.`, landing on the skipped cell).
   - **Promotion** on reaching the **far end of any file** (the 11 border cells of the
     opposite side). Promote to **Q, R, B, or N** (full underpromotion) via a
     dual-facing picker oriented to the promoting seat. Promoting to a bishop yields
@@ -192,8 +195,9 @@ Identical to orthodox chess **except** as noted. Verified against Wikipedia
 ```
 6 orthogonal (edge) units:
 N=(0,+1,-1)  S=(0,-1,+1)  NE=(+1,0,-1)  SW=(-1,0,+1)  NW=(-1,+1,0)  SE=(+1,-1,0)
-  White pawn forward = N ; captures = NW, NE
-  Black pawn forward = S ; captures = SW, SE
+  Near-army pawn forward = N (toward far border) ; captures = NW, NE
+  Far-army  pawn forward = S (toward near border) ; captures = SW, SE
+  (Direction follows the army's home edge, NOT the White/Black role.)
 
 6 diagonal (vertex) vectors (bishop/queen):
 (1,1,-2) (-1,2,-1) (-2,1,1) (-1,-1,2) (1,-2,1) (2,-1,-1)
@@ -329,8 +333,8 @@ Three independently-persisted stores, restored on load:
    buffer. Auto-saved every move; on load the app resumes exactly where it left off
    (important when an iPad sleeps mid-game).
 
-This supersedes the old "defer saved games" note for the *current* game; multi-slot
-*named* saved games remain deferred.
+Multi-slot *named* saved games remain deferred (§1); the *current* game is always
+persisted and resumed.
 
 ---
 
@@ -377,7 +381,9 @@ in Settings. Mockups: `mockups/layout-v3.png` (play), `mockups/game-over.png`,
   active seat, primary buttons.
 - Move = blue `#5fa8e0`; capture = red `#e0685f`; last-move trail = amber at low
   alpha.
-- Pieces: White = cream `#f1e8d6` (dark edge); Black = `#23262f` (light edge).
+- Pieces: the **White role** renders cream `#f1e8d6` (dark edge), the **Black role**
+  renders `#23262f` (light edge); in the **opening both armies render cream** until
+  the first move assigns roles (§5.1).
 - Ink: `#ece7dd` / dim `#9aa3b0` / faint `#6c7382`.
 
 ### 12.2 Typography
@@ -475,13 +481,13 @@ directly (no framework, no build). Minimum suite:
   — assert Black is in **checkmate** after move 4.
 - **Start-position legal-move counts** (perft-style sanity at depth 1, both before
   and after the first move assigns roles).
-- **En passant**: the `b5xc6 e.p.` example generates and applies correctly.
+- **En passant**: the `b5xPc6 e.p.` example generates and applies correctly.
 - **Promotion**: a pawn reaching a file's far end offers Q/R/B/N; **knight
   underpromotion** is generated and, where applicable, can give check.
 - **Draws**: threefold repetition and 50-move counters trigger correctly; stalemate
   is detected and scored ¾/¼ (and ½–½ under the toggle).
 - **Coordinate round-trips**: `(file,rank) ↔ cube` for all 91 cells; color classes;
-  the documented anchors (f6, white chevron, e4+NE=f5, g10).
+  the documented anchors (f6, near-army pawn chevron, e4+NE=f5, g10).
 
 ---
 
