@@ -55,7 +55,7 @@ export class Renderer {
       const { px, py } = cellPixel(x, y, SIZE);
       this.center.set(key(x, y), [px, py]);
       cells.appendChild(el('polygon', {
-        points: hexPoints(px, py, SIZE), class: 'cell t' + cellColor(x, y),
+        points: hexPoints(px, py, SIZE), class: 'cell t' + cellColor(x, y), 'data-key': key(x, y),
       }));
     }
     this.svg.appendChild(cells);
@@ -131,17 +131,13 @@ export class Renderer {
     for (const k of Object.keys(this.layers)) this.layers[k].replaceChildren();
   }
 
-  // Map a client point to a cell key (nearest center within a hex radius).
+  // Map a client point to a cell key. Uses elementFromPoint so it stays correct
+  // under any CSS transform (notably the 180° Flip-view rotation on the app root);
+  // only cell polygons are hit-testable (pieces/overlays are pointer-events:none).
   cellAtPoint(clientX, clientY) {
-    const pt = this.svg.createSVGPoint();
-    pt.x = clientX; pt.y = clientY;
-    const loc = pt.matrixTransform(this.svg.getScreenCTM().inverse());
-    let best = null, bestD = Infinity;
-    for (const [k, [cx, cy]] of this.center) {
-      const d = (cx - loc.x) ** 2 + (cy - loc.y) ** 2;
-      if (d < bestD) { bestD = d; best = k; }
-    }
-    return bestD <= (SIZE * 0.95) ** 2 ? best : null;
+    const hit = document.elementFromPoint(clientX, clientY);
+    const cell = hit && hit.closest('[data-key]');
+    return cell ? cell.getAttribute('data-key') : null;
   }
 }
 
