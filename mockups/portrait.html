@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hexagonal Chess — Portrait</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Hanken+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg-0:#121319;--bg-1:#171922;--panel:#1b1e28;--panel-edge:#2a2f3d;--tone-0:#333b47;--tone-1:#465264;--tone-2:#5b6a80;
+--white:#f1e8d6;--white-edge:#3a3528;--black:#23262f;--black-edge:#aab3c4;--accent:#d9a441;--accent-soft:#e7c074;--capture:#e0685f;--move:#5fa8e0;--ink:#ece7dd;--ink-dim:#9aa3b0;--ink-faint:#6c7382}
+*{box-sizing:border-box;margin:0;padding:0}html,body{height:100%}
+body{background:radial-gradient(120% 70% at 50% 50%,#1c1f2a 0%,var(--bg-0) 60%,#0d0e13 100%);color:var(--ink);font-family:"Hanken Grotesk",sans-serif;-webkit-font-smoothing:antialiased;overflow:hidden}
+.table{height:100vh;width:100vw;display:grid;grid-template-rows:auto 1fr auto}
+.bar{display:flex;align-items:center;gap:14px;padding:14px 22px;background:linear-gradient(180deg,var(--bg-1),var(--bg-0));border-block:1px solid #20232e}
+.bar.top{transform:rotate(180deg)}
+.seatblock{display:flex;align-items:center;gap:13px}
+.nm{font-family:"Fraunces",serif;font-size:18px;font-weight:600}
+.seat-dot{font-size:10px;color:var(--ink-faint);letter-spacing:.16em;text-transform:uppercase}
+.score-card{background:var(--panel);border:1px solid var(--panel-edge);border-radius:12px;padding:8px 13px;display:flex;align-items:center;gap:10px}
+.score-num{font-family:"Fraunces",serif;font-size:30px;font-weight:600;line-height:1;color:var(--accent-soft)}
+.score-meta .lbl{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-faint)}
+.score-meta .adv{font-size:12px;color:var(--ink-dim)}
+.status{border-radius:11px;padding:8px 14px;background:linear-gradient(180deg,#222838,#1a1e28);border:1px solid #2c3346}
+.status .turn{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-dim)}
+.status .state{font-family:"Fraunces",serif;font-size:16px;font-weight:600;margin-top:1px}
+.bar.active .status{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}.bar.active .status .state{color:var(--accent-soft)}
+.controls{display:flex;gap:9px;margin-left:auto;flex-wrap:wrap;justify-content:flex-end}
+.btn{font-size:13.5px;font-weight:600;color:var(--ink);background:var(--panel);border:1px solid var(--panel-edge);border-radius:11px;padding:11px 15px;display:flex;align-items:center;justify-content:center;gap:7px;cursor:pointer}
+.btn .ic{font-size:15px;opacity:.85}.btn.ghost{background:transparent}.btn.danger{color:#e89a93;border-color:#4a2e2c}.btn.mute{color:#e0685f;border-color:#4a2e2c;background:rgba(224,104,95,.07)}
+.board-wrap{position:relative;display:flex;align-items:center;justify-content:center;padding:14px}
+svg.board{width:auto;height:100%;max-width:100%;overflow:visible}
+.cell{stroke:#10121a;stroke-width:1.1}.cell.t0{fill:var(--tone-0)}.cell.t1{fill:var(--tone-1)}.cell.t2{fill:var(--tone-2)}
+.lastmove{fill:var(--accent);opacity:.15}
+.tgt{fill:none;stroke-width:5.5;stroke-linejoin:round}.tgt.move{stroke:var(--move)}.tgt.cap{stroke:var(--capture)}
+.selins{fill:var(--accent);opacity:.12}.selstroke{fill:none;stroke:var(--accent);stroke-width:4;stroke-linejoin:round}
+@keyframes pulse{0%,100%{opacity:.4}50%{opacity:1}}.tgt{animation:pulse 1.6s ease-in-out infinite}
+.piece{font-family:"Segoe UI Symbol","Apple Symbols","Noto Sans Symbols2",sans-serif;font-size:43px;text-anchor:middle;dominant-baseline:central;paint-order:stroke}
+.piece.w{fill:var(--white);stroke:var(--white-edge);stroke-width:1.1px}.piece.b{fill:var(--black);stroke:var(--black-edge);stroke-width:1.3px}
+.coord{fill:var(--ink-faint);font-size:9px;opacity:.55}
+.brand{position:absolute;bottom:8px;left:50%;transform:translateX(-50%);font-family:"Fraunces",serif;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--ink-faint)}
+</style></head>
+<body>
+<div class="table">
+  <!-- TOP bar = far seat (Black), rotated -->
+  <div class="bar top">
+    <div class="seatblock"><span class="nm">Black</span><span class="seat-dot">far</span></div>
+    <div class="score-card"><div class="score-num">1½</div><div class="score-meta"><div class="lbl">Match</div><div class="adv">—</div></div></div>
+    <div class="status"><div class="turn">Waiting</div><div class="state">Black</div></div>
+    <div class="controls">
+      <button class="btn"><span class="ic">⤺</span>Undo</button><button class="btn"><span class="ic">½</span>Draw</button>
+      <button class="btn ghost"><span class="ic">⚙</span>Settings</button><button class="btn danger"><span class="ic">⚑</span>Resign</button><button class="btn mute"><span class="ic">🔇</span>Mute</button>
+    </div>
+  </div>
+
+  <div class="board-wrap"><svg class="board" id="board"></svg><div class="brand">Gliński · Hexagonal Chess</div></div>
+
+  <!-- BOTTOM bar = near seat (White), on move -->
+  <div class="bar active">
+    <div class="seatblock"><span class="nm">White</span><span class="seat-dot">near</span></div>
+    <div class="score-card"><div class="score-num">1½</div><div class="score-meta"><div class="lbl">Match</div><div class="adv">+1</div></div></div>
+    <div class="status"><div class="turn">Your move</div><div class="state">White to play</div></div>
+    <div class="controls">
+      <button class="btn"><span class="ic">⤺</span>Undo</button><button class="btn"><span class="ic">½</span>Draw</button>
+      <button class="btn ghost"><span class="ic">⚙</span>Settings</button><button class="btn danger"><span class="ic">⚑</span>Resign</button><button class="btn mute"><span class="ic">🔇</span>Mute</button>
+    </div>
+  </div>
+</div>
+<script type="module">
+const SIZE=40,R3=Math.sqrt(3);const F=['a','b','c','d','e','f','g','h','i','k','l'];
+const fi=f=>F.indexOf(f)-5,m0=x=>Math.min(0,x);const cube=(f,r)=>{const x=fi(f);const y=r-6-m0(x);return[x,y,-x-y];};
+const cells=[];for(let x=-5;x<=5;x++)for(let y=-5;y<=5;y++){const z=-x-y;if(Math.abs(z)<=5)cells.push([x,y,z]);}
+const px=x=>SIZE*1.5*x,py=(x,y)=>-SIZE*R3*(y+x/2),tn=(x,y)=>((x-y)%3+3)%3;
+const xs=cells.map(c=>px(c[0])),ys=cells.map(c=>py(c[0],c[1])),pad=SIZE*1.15;
+const svg=document.getElementById('board');
+svg.setAttribute('viewBox',`${Math.min(...xs)-pad} ${Math.min(...ys)-pad} ${Math.max(...xs)-Math.min(...xs)+2*pad} ${Math.max(...ys)-Math.min(...ys)+2*pad}`);
+const NS='http://www.w3.org/2000/svg',key=(x,y)=>x+','+y,ctr={};
+const hp=(cx,cy,r=SIZE)=>{let p=[];for(let i=0;i<6;i++){const a=Math.PI/180*60*i;p.push(`${(cx+r*Math.cos(a)).toFixed(2)},${(cy+r*Math.sin(a)).toFixed(2)}`);}return p.join(' ');};
+const mk=(t,a)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);svg.appendChild(e);return e;};
+for(const[x,y]of cells){const cx=px(x),cy=py(x,y);ctr[key(x,y)]=[cx,cy];mk('polygon',{points:hp(cx,cy),class:'cell t'+tn(x,y)});}
+const sq=s=>cube(s[0],parseInt(s.slice(1)));
+const W={g1:'K',f6:'Q',c1:'R',i3:'R',d4:'B',f3:'B',h3:'N',b1:'P',c2:'P',e3:'P',g3:'P',i2:'P',k1:'P',f4:'P'};
+const B={g10:'K',e8:'Q',c8:'R',i8:'R',f9:'B',d7:'B',h7:'N',b7:'P',c7:'P',e6:'P',g7:'P',i7:'P',k7:'P',f7:'P'};
+const occ={};for(const s in W){const c=sq(s);occ[key(c[0],c[1])]='w';}for(const s in B){const c=sq(s);occ[key(c[0],c[1])]='b';}
+for(const s of['e8','f6']){const c=sq(s);const[cx,cy]=ctr[key(c[0],c[1])];mk('polygon',{points:hp(cx,cy),class:'lastmove'});}
+for(const f of F){const x=fi(f);let yMin=99;for(const[cx,cy]of cells)if(cx===x)yMin=Math.min(yMin,cy);const[sx,sy]=ctr[key(x,yMin)];mk('text',{x:sx,y:sy+SIZE*0.88,'text-anchor':'middle',class:'coord'}).textContent=f;}
+const ORTHO=[[0,1,-1],[0,-1,1],[1,0,-1],[-1,0,1],[-1,1,0],[1,-1,0]],DIAG=[[1,1,-2],[-1,2,-1],[-2,1,1],[-1,-1,2],[1,-2,1],[2,-1,-1]];
+const sel=sq('f6');const tg=[];
+for(const d of[...ORTHO,...DIAG]){let cx=sel[0]+d[0],cy=sel[1]+d[1],cz=sel[2]+d[2];while(Math.abs(cx)<=5&&Math.abs(cy)<=5&&Math.abs(cz)<=5&&(key(cx,cy)in ctr)){const o=occ[key(cx,cy)];if(o==='w')break;if(o==='b'){tg.push([cx,cy,'cap']);break;}tg.push([cx,cy,'move']);cx+=d[0];cy+=d[1];cz+=d[2];}}
+const G={K:'♚',Q:'♛',R:'♜',B:'♝',N:'♞',P:'♟'};
+const place=(m,c,far)=>{for(const s in m){const cu=sq(s);const[cx,cy]=ctr[key(cu[0],cu[1])];const t=mk('text',{x:cx,y:cy,class:'piece '+c});t.textContent=G[m[s]];if(far)t.setAttribute('transform',`rotate(180 ${cx} ${cy})`);}};
+place(W,'w',false);place(B,'b',true);
+const[scx,scy]=ctr[key(sel[0],sel[1])];mk('polygon',{points:hp(scx,scy,SIZE*0.9),class:'selins'});mk('polygon',{points:hp(scx,scy,SIZE*0.86),class:'selstroke'});
+for(const[tx,ty,k]of tg){const[cx,cy]=ctr[key(tx,ty)];mk('polygon',{points:hp(cx,cy,SIZE*0.8),class:'tgt '+(k==='cap'?'cap':'move')});}
+</script>
+</body></html>
