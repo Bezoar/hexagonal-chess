@@ -152,6 +152,7 @@
           <div class="tabs">
             <button class="tab act" data-help-tab="howto"><span class="ic">♟</span>How to play</button>
             <button class="tab" data-help-tab="controls"><span class="ic">⚙</span>Controls</button>
+            <button class="tab" data-help-tab="clock"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M12 13l3 2M9 2h6"/></svg></span>Timed games</button>
           </div>
         </div>
 
@@ -304,6 +305,53 @@
               lead. The big number is games won in this match.</p>
             <div class="callout"><b>Tip:</b> the brass highlight trails the last move, and the King's
               hex glows red when it's in check.</div>
+          </div>
+        </div>
+
+        <!-- TIMED GAMES -->
+        <div class="help-body panel" data-help-panel="clock" hidden>
+          <p class="lead">Off by default — Gliński's is untimed unless you add a chess clock. Turn
+            one on in <b>Settings</b> to play against the clock.</p>
+
+          <div class="sec">
+            <h3>Turning on a clock</h3>
+            <div class="dl">
+              <div>
+                <div class="dt"><span class="nm">Pick a time control</span>
+                  <span class="tag">Settings ▸ Clock</span></div>
+                <div class="dd">Choose <b>Off</b> or a time control — a <b>base time</b> per player,
+                  sometimes with an <b>increment</b> (a few seconds added back to your clock each move).
+                  It takes effect on the next new game.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Starting the game</h3>
+            <p>With a clock set, the board waits until someone starts it. <b>Tap your own clock</b> to
+              begin: that picks <b>you as Black</b>, makes your opponent <b>White</b>, and starts
+              White's clock — White then makes the first move. (Just like a real chess clock, pressing
+              your side starts your opponent's time.)</p>
+          </div>
+
+          <div class="sec">
+            <h3>During play</h3>
+            <div class="ctrls">
+              <div class="ctrl"><div class="ico">⏱️</div><div><span class="nm">Your clock runs on your turn</span>
+                <div class="ds">The side to move has the highlighted clock; the other is dimmed.</div></div></div>
+              <div class="ctrl"><div class="ico">🔁</div><div><span class="nm">Moving hands off the clock</span>
+                <div class="ds">Completing a move stops your clock (adding any increment) and starts your opponent's.</div></div></div>
+              <div class="ctrl"><div class="ico">🚫</div><div><span class="nm">No takebacks</span>
+                <div class="ds">Undo is unavailable while a time control is set.</div></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Running out of time</h3>
+            <p>If your clock reaches <b>zero</b> you <b>lose on time</b> — unless your opponent has no
+              way to checkmate you, in which case it's a <b>draw</b>.</p>
+            <div class="callout">In Gliński's hex chess even a single knight or bishop can mate, so a
+              timeout is only a draw when the other side is down to a <b>bare king</b>.</div>
           </div>
         </div>
       </div>

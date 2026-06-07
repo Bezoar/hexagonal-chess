@@ -260,6 +260,8 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .helpmodal .tab { position:relative; padding:11px 16px 13px; font-size:14.5px; font-weight:600;
   color:var(--ink-faint); background:transparent; border:none; cursor:pointer; font-family:inherit; }
 .helpmodal .tab .ic { margin-right:7px; opacity:.85; }
+.helpmodal .tab .ic svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; }
 .helpmodal .tab.act { color:var(--accent-soft); }
 .helpmodal .tab.act::after { content:""; position:absolute; left:8px; right:8px; bottom:-1px; height:2.5px;
   border-radius:2px; background:linear-gradient(90deg, var(--accent-soft), var(--accent)); }
