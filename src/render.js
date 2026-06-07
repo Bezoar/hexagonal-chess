@@ -5,7 +5,7 @@
 // a CSS class on the app root (Flip view, spec §9.5).
 
 import {
-  CELLS, cellColor, cellPixel, key, parseKey, FILES, fileIndex,
+  CELLS, cellColor, cellPixel, key, parseKey, cubeToSquare,
 } from './hex.js';
 import { makePiece } from './pieces.js';
 
@@ -88,18 +88,21 @@ export class Renderer {
       }
     }
 
-    // coordinate labels (bottom cell of each file)
+    // coordinate labels — file+rank tucked into each cell's lower-right corner,
+    // with a 180°-rotated copy so each player reads their own (dual-facing).
     if (showCoords) {
-      for (const f of FILES) {
-        const x = fileIndex(f);
-        let best = null, bestY = -Infinity;
-        for (const [k, [, cy]] of this.center) {
-          if (parseKey(k)[0] === x && cy > bestY) { bestY = cy; best = k; }
-        }
-        const [cx, cy] = this.center.get(best);
-        const t = el('text', { x: cx, y: cy + SIZE * 0.86, 'text-anchor': 'middle', class: 'coord' });
-        t.textContent = f;
-        this.layers.coords.appendChild(t);
+      const dx = SIZE * 0.52, dy = SIZE * 0.60;
+      for (const [k, [cx, cy]] of this.center) {
+        const sq = cubeToSquare(...parseKey(k));
+        const near = el('text', { x: cx + dx, y: cy + dy, 'text-anchor': 'end', class: 'coord' });
+        near.textContent = sq;
+        this.layers.coords.appendChild(near);
+        const far = el('text', {
+          x: cx + dx, y: cy + dy, 'text-anchor': 'end', class: 'coord',
+          transform: `rotate(180 ${cx} ${cy})`,
+        });
+        far.textContent = sq;
+        this.layers.coords.appendChild(far);
       }
     }
 
