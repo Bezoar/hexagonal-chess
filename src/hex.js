@@ -31,12 +31,13 @@ export const cubeToSquare = (x, y) => {
   return file + rank;
 };
 
-// Square name oriented to White's home edge. The two armies are horizontal
-// mirrors of each other (a y<->z swap, since z = -x-y), so when the White army
-// sits on the far edge we mirror the rank — White's home then reads as rank 1,
-// matching standard chess. Files (columns) are unchanged. `farWhite` applies it.
+// Square name presented from White's side of the board. When the White army
+// sits on the far edge we rotate the labels 180° (a point reflection of the
+// board, x,y -> -x,-y), so the far player reads files a–l left-to-right and
+// rank 1 at their near edge — exactly the view a near-White player gets.
+// `farWhite` applies the rotation; otherwise the board-fixed labels are used.
 export const cubeToSquareOriented = (x, y, farWhite) =>
-  (farWhite ? cubeToSquare(x, -x - y) : cubeToSquare(x, y));
+  (farWhite ? cubeToSquare(-x, -y) : cubeToSquare(x, y));
 export function squareToCube(sq) {
   return frToCube(sq[0], parseInt(sq.slice(1), 10));
 }
