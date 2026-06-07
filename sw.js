@@ -1,6 +1,6 @@
 // sw.js — offline app shell for the static site.
 // Bump CACHE when shipping changes so clients pick up a fresh precache.
-const CACHE = 'hexchess-v14';
+const CACHE = 'hexchess-v15';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './src/ui.js', './src/game.js', './src/rules.js', './src/hex.js', './src/match.js',
@@ -36,15 +36,13 @@ self.addEventListener('fetch', (e) => {
     return;
   }
 
-  // Same-origin assets: stale-while-revalidate (fast + self-updating).
+  // Same-origin assets: network-first so a deploy lands on the next reload (no
+  // stale-CSS dance); fall back to cache only when offline.
   if (url.origin === location.origin) {
     e.respondWith(
-      caches.match(req).then((hit) => {
-        const net = fetch(req)
-          .then((r) => { if (r && r.ok) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put(req, cp)); } return r; })
-          .catch(() => hit);
-        return hit || net;
-      }),
+      fetch(req)
+        .then((r) => { if (r && r.ok) { const cp = r.clone(); caches.open(CACHE).then((c) => c.put(req, cp)); } return r; })
+        .catch(() => caches.match(req)),
     );
     return;
   }
