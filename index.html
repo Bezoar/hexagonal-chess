@@ -126,6 +126,8 @@
         <div class="grp">Clock</div>
         <div class="row"><div><div class="lab">Time control</div><div class="sub">A chess clock per player; applies to a new game. Tap your clock to start.</div></div>
           <div class="seg" data-set="clockPreset"><button data-val="off">Off</button><button data-val="5+0">5 min</button><button data-val="10+0">10 min</button></div></div>
+        <div class="row"><div><div class="lab">End your turn by</div><div class="sub">Switch automatically when you move, or tap your own clock to end the turn.</div></div>
+          <div class="seg" data-set="clockHandoff"><button data-val="auto">Moving</button><button data-val="press">Clock tap</button></div></div>
         <div class="grp">Requests</div>
         <div class="row"><div><div class="lab">Request / Accept Draw</div></div><div class="toggle" data-set="requestDraw"><div class="knob"></div></div></div>
         <div class="row"><div><div class="lab">Request / Accept Undo</div></div><div class="toggle" data-set="requestUndo"><div class="knob"></div></div></div>
@@ -339,8 +341,8 @@
             <div class="ctrls">
               <div class="ctrl"><div class="ico">⏱️</div><div><span class="nm">Your clock runs on your turn</span>
                 <div class="ds">The side to move has the highlighted clock; the other is dimmed.</div></div></div>
-              <div class="ctrl"><div class="ico">🔁</div><div><span class="nm">Moving hands off the clock</span>
-                <div class="ds">Completing a move stops your clock (adding any increment) and starts your opponent's.</div></div></div>
+              <div class="ctrl"><div class="ico">🔁</div><div><span class="nm">Ending your turn</span>
+                <div class="ds">By default, completing a move hands the clock to your opponent (with any increment). You can instead require a <b>clock tap</b> to end each turn — <span class="tag">Settings ▸ Clock</span></div></div></div>
               <div class="ctrl"><div class="ico">🚫</div><div><span class="nm">No takebacks</span>
                 <div class="ds">Undo is unavailable while a time control is set.</div></div></div>
             </div>

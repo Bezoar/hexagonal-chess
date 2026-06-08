@@ -39,7 +39,7 @@ class App {
     this.gutters = { near: $('.gutter.near'), far: $('.gutter.far') };
     this.flipped = false;
 
-    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null };
+    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     this.drag = null;
     this.endHandled = false;
     this._tickId = null; // requestAnimationFrame id for the clock ticker
@@ -107,6 +107,7 @@ class App {
     audio.unlock();
     if (this.game.result || this.ui.pendingPromo || this._anyOverlay()) return;
     if (this.game.clock && !this.game.whiteArmy) return; // timed: tap a clock to start first
+    if (this.ui.awaitingPress) return; // press-handoff: board frozen until the mover taps their clock
     const cell = this.renderer.cellAtPoint(e.clientX, e.clientY);
     if (!cell) { this._deselect(); return; }
     if (this.ui.selected && this.ui.targets.some((t) => t.to === cell)) {
@@ -161,9 +162,12 @@ class App {
   _postMove(rec) {
     if (this.game.checkedArmy()) audio.play('check');
     else audio.play(rec.captured ? 'capture' : 'move');
-    // Auto-switch handoff: a completed move stops the mover's clock and starts the
-    // opponent's (the press-clock alternative is a later slice).
-    if (rec.from && this.game.clock && this.game.clock.running) this.game.clock.switchTurn(Date.now());
+    // Handoff: 'auto' switches the clock the moment a move completes; 'press' keeps
+    // the mover's clock running until they tap their own clock to end the turn.
+    if (rec.from && this.game.clock && this.game.clock.running) {
+      if (this.settings.clockHandoff === 'press') this.ui.awaitingPress = this.game.clock.running;
+      else this.game.clock.switchTurn(Date.now());
+    }
     this.ui.selected = null; this.ui.targets = []; this.ui.request = null;
     if (rec.from) {
       this._pendingAnim = {
@@ -260,7 +264,7 @@ class App {
     if (resetMatch) { this.match.reset(); store.saveMatch(this.match.serialize()); }
     this._stopTick();
     this.game = new Game(this.rules(), this._clockConfig());
-    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null };
+    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     this.endHandled = false;
     $('#endcard').hidden = true;
     this.updateAll();
@@ -356,7 +360,7 @@ class App {
     if (this.settings.clockPreset !== prevPreset && !this.game.history.length && !this.game.result) {
       this._stopTick();
       this.game = new Game(this.rules(), this._clockConfig());
-      this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null };
+      this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     }
     $('#settings').hidden = true;
     this.updateAll();
@@ -376,12 +380,20 @@ class App {
   // timed too). Mid-game the button is inert in this auto-switch MVP.
   _clockTap(seat) {
     const c = this.game.clock;
-    if (!c || this.game.result || this.game.whiteArmy) return;
-    const white = opponent(seat);
-    this.game.whiteArmy = white;
-    this.game.toMove = white;
-    c.start(white, Date.now());
-    this.updateAll();
+    if (!c || this.game.result) return;
+    if (!this.game.whiteArmy) {
+      // pre-game start: tapper elects Black; the opponent (White) moves first.
+      const white = opponent(seat);
+      this.game.whiteArmy = white;
+      this.game.toMove = white;
+      c.start(white, Date.now());
+      this.updateAll();
+    } else if (this.ui.awaitingPress === seat) {
+      // press-handoff: the mover ends their turn, handing the clock to the opponent.
+      c.switchTurn(Date.now());
+      this.ui.awaitingPress = null;
+      this.updateAll();
+    }
   }
 
   // Run the ticker while a clock is actively counting; stop otherwise.
@@ -540,6 +552,12 @@ class App {
       } else {
         set('turn', 'New game'); set('state', 'Move to play White'); set('last', 'first move claims White');
       }
+    } else if (this.ui.awaitingPress) {
+      if (this.ui.awaitingPress === seat) {
+        set('turn', 'Move played'); set('state', 'Press your clock'); set('last', this._lastText());
+      } else {
+        set('turn', 'Waiting'); set('state', ROLE_LABEL[role]); set('last', this._lastText());
+      }
     } else if (this.game.toMove === seat) {
       set('turn', checked === seat ? 'Check' : 'Your move');
       set('state', checked === seat ? 'Defend the king' : `${ROLE_LABEL[role]} to play`);
@@ -547,7 +565,8 @@ class App {
     } else {
       set('turn', 'Waiting'); set('state', ROLE_LABEL[role]); set('last', this._lastText());
     }
-    g.classList.toggle('on-move', !r && this.game.whiteArmy && this.game.toMove === seat);
+    const actor = this.ui.awaitingPress || this.game.toMove; // who must act (press, or move)
+    g.classList.toggle('on-move', !r && !!this.game.whiteArmy && actor === seat);
 
     // prompt (shown to the opponent of the requester)
     const promptEl = $('[data-bind="prompt"]', g);
@@ -576,10 +595,11 @@ class App {
       if (c) {
         set('clock-time', fmtClock(c.remaining(seat, Date.now())));
         const pregame = !this.game.whiteArmy && !r;
-        clockEl.classList.toggle('armed', pregame);
-        clockEl.classList.toggle('active', !pregame && c.running === seat && c.runningSince != null && !r);
+        const canPress = this.ui.awaitingPress === seat && !r; // press-handoff: this seat ends the turn
+        clockEl.classList.toggle('armed', pregame || canPress); // tappable (brass)
+        clockEl.classList.toggle('active', !r && c.running === seat && c.runningSince != null);
         const btn = $('[data-action="clock"]', clockEl);
-        if (btn) btn.disabled = !pregame;
+        if (btn) btn.disabled = !(pregame || canPress);
       }
     }
   }

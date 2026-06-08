@@ -15,6 +15,7 @@ export const DEFAULT_SETTINGS = {
   coords: false,
   sound: true,
   clockPreset: 'off', // 'off' | '5+0' | '10+0' (keys of CLOCK_PRESETS in ui.js)
+  clockHandoff: 'auto', // 'auto' (switch on your move) | 'press' (tap your clock to end the turn)
 };
 
 function read(key, fallback) {
