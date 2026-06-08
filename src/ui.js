@@ -115,11 +115,15 @@ class App {
       const ht = e.target.closest('[data-help-tab]');
       if (ht) this._helpTab(ht.dataset.helpTab);
       if (e.target.id === 'help') $('#help').hidden = true; // tap the backdrop to close
+      // Any click may have opened/closed Settings or Help — reconcile the clock.
+      this._syncClockPause();
     });
     const board = $('#board');
     board.addEventListener('pointerdown', (e) => this._down(e));
     window.addEventListener('pointermove', (e) => this._move(e));
     window.addEventListener('pointerup', (e) => this._up(e));
+    // Backgrounding / device-lock pauses the active clock; returning resumes it.
+    document.addEventListener('visibilitychange', () => this._syncClockPause());
   }
 
   // ---- board input (drag-or-tap) ----
@@ -431,6 +435,34 @@ class App {
       c.switchTurn(Date.now());
       this.ui.awaitingPress = null;
       this.updateAll();
+    }
+  }
+
+  // Pause the running clock while play is interrupted — the app is hidden
+  // (backgrounded / device locked) or a meta-overlay (Settings/Help) is open —
+  // and resume it on return. The mover's own move is NOT an interruption, so the
+  // promotion picker (and other in-play prompts) are deliberately not checked.
+  // Idempotent: it reconciles the clock to the *current* interrupted state each
+  // call, so overlapping causes (e.g. hidden while Settings is open) compose
+  // without reference counting.
+  _syncClockPause() {
+    const c = this.game.clock;
+    if (!c || c.running == null || this.game.result) return;
+    const interrupted = document.hidden || !$('#settings').hidden || !$('#help').hidden;
+    const now = Date.now();
+    if (interrupted && c.runningSince != null) {
+      // Freeze. Recompute from the running-since timestamp first: if the active
+      // side already ran out at this instant (e.g. rAF was throttled right as we
+      // backgrounded), resolve the flag now instead of banking and resuming later.
+      const flagged = c.flagged(now);
+      if (flagged) { this._onFlag(flagged); return; }
+      c.pause(now);
+      this.updateAll(); // persists a paused snapshot and stops the ticker
+    } else if (!interrupted && c.runningSince == null) {
+      c.resume(now);
+      const flagged = c.flagged(now); // defensive: a clock that hit zero while away
+      if (flagged) { this._onFlag(flagged); return; }
+      this.updateAll(); // restarts the ticker, re-banks a paused snapshot
     }
   }
 
