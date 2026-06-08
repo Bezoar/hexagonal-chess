@@ -14,6 +14,19 @@ const ROLE_LABEL = { white: 'White', black: 'Black' };
 const SEAT_LABEL = { near: 'Near', far: 'Far' };
 const DRAG_THRESHOLD = 8;
 
+// Time controls (ms). `clockPreset` in Settings selects one; null = untimed.
+const CLOCK_PRESETS = {
+  off: null,
+  '5+0': { base: 5 * 60000, increment: 0 },
+  '10+0': { base: 10 * 60000, increment: 0 },
+};
+
+// Remaining ms -> "m:ss" (ceil so a clock reads 0:01 until it truly hits zero).
+const fmtClock = (ms) => {
+  const s = Math.ceil(Math.max(0, ms) / 1000);
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+};
+
 const $ = (sel, root = document) => root.querySelector(sel);
 const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
 
@@ -26,9 +39,10 @@ class App {
     this.gutters = { near: $('.gutter.near'), far: $('.gutter.far') };
     this.flipped = false;
 
-    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null };
+    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     this.drag = null;
     this.endHandled = false;
+    this._tickId = null; // requestAnimationFrame id for the clock ticker
 
     this._loadGame();
     this._applyTheme();
@@ -50,11 +64,18 @@ class App {
   _loadGame() {
     const saved = store.loadGame();
     try {
-      this.game = saved ? Game.deserialize(saved) : new Game(this.rules());
+      this.game = saved ? Game.deserialize(saved) : new Game(this.rules(), this._clockConfig());
     } catch {
-      this.game = new Game(this.rules());
+      this.game = new Game(this.rules(), this._clockConfig());
     }
+    // A persisted game banks its clock paused (see updateAll); resume it on load so
+    // the offline gap isn't counted against the player on the move.
+    const c = this.game.clock;
+    if (c && c.running && c.runningSince == null && !this.game.result) c.resume(Date.now());
   }
+
+  // The time control for a NEW game, from Settings (null = untimed).
+  _clockConfig() { return CLOCK_PRESETS[this.settings.clockPreset] || null; }
 
   _applyTheme() { this.app.dataset.theme = this.settings.theme; }
 
@@ -85,6 +106,8 @@ class App {
   _down(e) {
     audio.unlock();
     if (this.game.result || this.ui.pendingPromo || this._anyOverlay()) return;
+    if (this.game.clock && !this.game.whiteArmy) return; // timed: tap a clock to start first
+    if (this.ui.awaitingPress) return; // press-handoff: board frozen until the mover taps their clock
     const cell = this.renderer.cellAtPoint(e.clientX, e.clientY);
     if (!cell) { this._deselect(); return; }
     if (this.ui.selected && this.ui.targets.some((t) => t.to === cell)) {
@@ -139,6 +162,12 @@ class App {
   _postMove(rec) {
     if (this.game.checkedArmy()) audio.play('check');
     else audio.play(rec.captured ? 'capture' : 'move');
+    // Handoff: 'auto' switches the clock the moment a move completes; 'press' keeps
+    // the mover's clock running until they tap their own clock to end the turn.
+    if (rec.from && this.game.clock && this.game.clock.running) {
+      if (this.settings.clockHandoff === 'press') this.ui.awaitingPress = this.game.clock.running;
+      else this.game.clock.switchTurn(Date.now());
+    }
     this.ui.selected = null; this.ui.targets = []; this.ui.request = null;
     if (rec.from) {
       this._pendingAnim = {
@@ -188,6 +217,7 @@ class App {
       case 'help': this._openHelp(seat); break;
       case 'help-close': $('#help').hidden = true; break;
       case 'fullscreen': this._toggleFullscreen(); break;
+      case 'clock': this._clockTap(seat); break;
       case 'resign':
         if (!this.game.result && this.game.whiteArmy) { this.game.resign(seat); this._postMove({}); }
         break;
@@ -232,8 +262,9 @@ class App {
 
   _newGame(resetMatch) {
     if (resetMatch) { this.match.reset(); store.saveMatch(this.match.serialize()); }
-    this.game = new Game(this.rules());
-    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null };
+    this._stopTick();
+    this.game = new Game(this.rules(), this._clockConfig());
+    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     this.endHandled = false;
     $('#endcard').hidden = true;
     this.updateAll();
@@ -318,11 +349,19 @@ class App {
   }
 
   _saveSettings() {
+    const prevPreset = this.settings.clockPreset;
     this.settings = { ...this._draft };
     store.saveSettings(this.settings);
     audio.setMuted(!this.settings.sound);
     this._applyTheme();
     this.game.rules = this.rules(); // apply to the running game
+    // A changed time control applies to a fresh (unstarted) game right away, so you
+    // can flip it on and play; an in-progress game keeps its clock until the next one.
+    if (this.settings.clockPreset !== prevPreset && !this.game.history.length && !this.game.result) {
+      this._stopTick();
+      this.game = new Game(this.rules(), this._clockConfig());
+      this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
+    }
     $('#settings').hidden = true;
     this.updateAll();
   }
@@ -333,6 +372,71 @@ class App {
     audio.setMuted(!on);
     if (on) audio.unlock();
     this.updateAll();
+  }
+
+  // ---- clock (timed games) ----
+  // Tapping a clock before the game starts elects that seat Black; the opponent is
+  // White and moves first, with White's clock running (so White's first move is
+  // timed too). Mid-game the button is inert in this auto-switch MVP.
+  _clockTap(seat) {
+    const c = this.game.clock;
+    if (!c || this.game.result) return;
+    if (!this.game.whiteArmy) {
+      // pre-game start: tapper elects Black; the opponent (White) moves first.
+      const white = opponent(seat);
+      this.game.whiteArmy = white;
+      this.game.toMove = white;
+      c.start(white, Date.now());
+      this.updateAll();
+    } else if (this.ui.awaitingPress === seat) {
+      // press-handoff: the mover ends their turn, handing the clock to the opponent.
+      c.switchTurn(Date.now());
+      this.ui.awaitingPress = null;
+      this.updateAll();
+    }
+  }
+
+  // Run the ticker while a clock is actively counting; stop otherwise.
+  _syncTick() {
+    const c = this.game.clock;
+    const run = !!(c && c.running && c.runningSince != null && !this.game.result);
+    if (run) this._tick(); else this._stopTick();
+  }
+
+  _tick() {
+    if (this._tickId) return; // already running
+    const frame = () => {
+      this._tickId = null;
+      const c = this.game.clock;
+      if (!c || !c.running || c.runningSince == null || this.game.result) return;
+      const now = Date.now();
+      const flagged = c.flagged(now);
+      if (flagged) { this._onFlag(flagged); return; }
+      this._renderClocks(now);
+      this._tickId = requestAnimationFrame(frame);
+    };
+    this._tickId = requestAnimationFrame(frame);
+  }
+
+  _stopTick() {
+    if (this._tickId) { cancelAnimationFrame(this._tickId); this._tickId = null; }
+  }
+
+  _onFlag(seat) {
+    this._stopTick();
+    this.game.flag(seat);
+    this.updateAll();
+    if (!this.endHandled) this._endGame();
+  }
+
+  // Update just the time readouts each frame (cheap; the heavy render is in updateAll).
+  _renderClocks(now) {
+    const c = this.game.clock;
+    if (!c) return;
+    for (const seat of ['near', 'far']) {
+      const el = $('[data-bind="clock-time"]', this.gutters[seat]);
+      if (el) el.textContent = fmtClock(c.remaining(seat, now));
+    }
   }
 
   // ---- help / field guide ----
@@ -387,7 +491,14 @@ class App {
   updateAll() {
     this._drawBoard();
     for (const seat of ['near', 'far']) this._updateGutter(seat);
+    // Persist a *paused* clock snapshot (banked, no live runningSince) so a reload
+    // doesn't count the offline gap; the live clock is resumed immediately after.
+    const c = this.game.clock;
+    const ticking = c && c.running && c.runningSince != null;
+    if (ticking) c.pause(Date.now());
     store.saveGame(this.game.serialize());
+    if (ticking) c.resume(Date.now());
+    this._syncTick();
   }
 
   _material() {
@@ -435,7 +546,18 @@ class App {
       set('state', this._resultStateFor(seat));
       set('last', '');
     } else if (!this.game.whiteArmy) {
-      set('turn', 'New game'); set('state', 'Move to play White'); set('last', 'first move claims White');
+      if (this.game.clock) {
+        set('turn', 'New game'); set('state', 'Tap your clock to start');
+        set('last', 'tapping picks Black; opponent plays White');
+      } else {
+        set('turn', 'New game'); set('state', 'Move to play White'); set('last', 'first move claims White');
+      }
+    } else if (this.ui.awaitingPress) {
+      if (this.ui.awaitingPress === seat) {
+        set('turn', 'Move played'); set('state', 'Press your clock'); set('last', this._lastText());
+      } else {
+        set('turn', 'Waiting'); set('state', ROLE_LABEL[role]); set('last', this._lastText());
+      }
     } else if (this.game.toMove === seat) {
       set('turn', checked === seat ? 'Check' : 'Your move');
       set('state', checked === seat ? 'Defend the king' : `${ROLE_LABEL[role]} to play`);
@@ -443,7 +565,8 @@ class App {
     } else {
       set('turn', 'Waiting'); set('state', ROLE_LABEL[role]); set('last', this._lastText());
     }
-    g.classList.toggle('on-move', !r && this.game.whiteArmy && this.game.toMove === seat);
+    const actor = this.ui.awaitingPress || this.game.toMove; // who must act (press, or move)
+    g.classList.toggle('on-move', !r && !!this.game.whiteArmy && actor === seat);
 
     // prompt (shown to the opponent of the requester)
     const promptEl = $('[data-bind="prompt"]', g);
@@ -458,10 +581,27 @@ class App {
     const whiteSet = !!this.game.whiteArmy;
     const over = !!r;
     const dis = (action, cond) => { const b = $(`[data-action="${action}"][data-seat="${seat}"]`, g); if (b) b.disabled = cond; };
-    dis('undo', over || !this.game.history.length || !this.settings.requestUndo);
+    dis('undo', over || !this.game.history.length || !this.settings.requestUndo || !!this.game.clock);
     dis('draw', over || this.game.toMove !== seat || !this.settings.requestDraw);
     dis('resign', over || !whiteSet);
     $(`[data-action="mute"][data-seat="${seat}"]`, g).classList.toggle('on', !this.settings.sound);
+
+    // clock (timed games): show the readout, mark armed (pre-game, tap to start) or
+    // active (this seat's clock running); the button is only interactive pre-game.
+    const clockEl = $('[data-bind="clock"]', g);
+    if (clockEl) {
+      const c = this.game.clock;
+      clockEl.hidden = !c;
+      if (c) {
+        set('clock-time', fmtClock(c.remaining(seat, Date.now())));
+        const pregame = !this.game.whiteArmy && !r;
+        const canPress = this.ui.awaitingPress === seat && !r; // press-handoff: this seat ends the turn
+        clockEl.classList.toggle('armed', pregame || canPress); // tappable (brass)
+        clockEl.classList.toggle('active', !r && c.running === seat && c.runningSince != null);
+        const btn = $('[data-action="clock"]', clockEl);
+        if (btn) btn.disabled = !(pregame || canPress);
+      }
+    }
   }
 
   _lastText() {
@@ -475,6 +615,7 @@ class App {
     const r = this.game.result;
     if (r.kind === 'draw') return r.reason === 'agreement' ? 'Draw agreed' : 'Draw';
     if (r.kind === 'stalemate') return r.winner === seat ? 'Stalemate (¾)' : 'Stalemated (¼)';
+    if (r.kind === 'timeout') return r.winner === seat ? 'Won on time' : 'Lost on time';
     return r.winner === seat ? 'You win' : (r.kind === 'resign' ? 'Resigned' : 'Checkmated');
   }
 
@@ -495,6 +636,7 @@ class App {
     if (r.kind === 'checkmate') { kick = 'Checkmate'; main = `${ROLE_LABEL[this.game.role(r.winner)]} wins`; }
     else if (r.kind === 'resign') { kick = 'Resignation'; main = `${ROLE_LABEL[this.game.role(r.winner)]} wins`; }
     else if (r.kind === 'stalemate') { kick = 'Stalemate'; main = `${ROLE_LABEL[this.game.role(r.winner)]} ¾ – ¼`; }
+    else if (r.kind === 'timeout') { kick = 'Time'; main = `${ROLE_LABEL[this.game.role(r.winner)]} wins on time`; }
     else { kick = 'Draw'; main = this._drawLabel(r.reason); }
     $$('[data-bind="end-kick"]').forEach((e) => (e.textContent = kick));
     $$('[data-bind="end-main"]').forEach((e) => (e.textContent = main));
@@ -505,6 +647,7 @@ class App {
     return {
       threefold: 'Threefold repetition', 'fifty-move': '50-move rule',
       'stalemate-draw': 'Stalemate', agreement: 'By agreement',
+      'timeout-insufficient': 'Insufficient material',
     }[reason] || 'Draw';
   }
 

@@ -88,6 +88,29 @@ body {
 
 .spacer { flex:1 1 auto; }
 
+/* ---------- clock (timed games) ---------- */
+/* One large tappable button: clock icon stacked above the running time. */
+.clock { display:flex; justify-content:center; padding:6px 0; }
+.clock[hidden] { display:none; }
+.clock-btn { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:8px;
+  width:100%; max-width:188px; padding:20px 18px 22px; border-radius:22px; cursor:pointer;
+  background:var(--panel); border:2px solid var(--panel-edge); color:var(--ink-dim);
+  box-shadow:0 10px 30px -20px #000; }
+.clock-ic { width:30px; height:30px; fill:none; stroke:currentColor; stroke-width:1.8;
+  stroke-linecap:round; stroke-linejoin:round; pointer-events:none; }
+.clock-time { font-family:"Fraunces", serif; font-size:52px; font-weight:600; line-height:1;
+  color:var(--ink); font-variant-numeric:tabular-nums; pointer-events:none; }
+.clock-btn:disabled { cursor:default; }
+.clock-btn:not(:disabled):active { transform:translateY(1px); }
+.clock.armed .clock-btn { border-color:var(--accent); color:var(--accent-soft); /* pre-game: tap to start */
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 20%, transparent) inset, 0 10px 30px -20px #000; }
+.clock.active .clock-btn { border-color:var(--accent-soft); color:var(--accent-soft); /* this seat is running */
+  background:color-mix(in srgb, var(--accent) 12%, transparent);
+  box-shadow:0 0 0 1px color-mix(in srgb, var(--accent) 25%, transparent) inset, 0 12px 34px -18px var(--accent); }
+.clock.active .clock-time { color:var(--accent-soft); }
+.clock:not(.active):not(.armed) .clock-time { color:var(--ink-faint); } /* idle seat dimmed */
+.clock:not(.active):not(.armed) .clock-btn { opacity:.72; }
+
 .controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .btn { font-size:14.4px; font-weight:600; color:var(--ink); background:var(--panel);
   border:1px solid var(--panel-edge); border-radius:11px; padding:10px 11px; cursor:pointer;
@@ -186,11 +209,11 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .histfoot { display:flex; justify-content:space-between; gap:10px; margin-top:13px; }
 
 /* settings */
-.settings .modal { width:430px; max-height:88%; overflow:auto; padding:20px 24px 22px; }
+.settings .modal { width:430px; max-height:96%; overflow:auto; padding:15px 24px 16px; }
 .settings h2 { font-family:"Fraunces",serif; font-size:27.6px; font-weight:600; display:flex; justify-content:space-between; align-items:baseline; }
 .savednote { font-size:12.6px; color:var(--ink-faint); letter-spacing:.04em; }
-.grp { font-family:"Fraunces",serif; font-size:13.8px; letter-spacing:.12em; color:var(--accent-soft); margin:16px 0 2px; text-transform:uppercase; }
-.settings .row { display:flex; align-items:center; justify-content:space-between; padding:10px 0; border-bottom:1px solid var(--panel-edge); gap:14px; }
+.grp { font-family:"Fraunces",serif; font-size:13.8px; letter-spacing:.12em; color:var(--accent-soft); margin:10px 0 1px; text-transform:uppercase; }
+.settings .row { display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid var(--panel-edge); gap:14px; }
 .settings .lab { font-size:16.1px; }
 .settings .sub { font-size:12.6px; color:var(--ink-faint); margin-top:2px; max-width:240px; }
 .toggle { width:44px; height:26px; border-radius:13px; background:var(--panel-edge); position:relative; border:1px solid var(--panel-edge); flex:none; cursor:pointer; }
@@ -200,7 +223,7 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .seg { display:inline-flex; background:var(--bg-0); border:1px solid var(--panel-edge); border-radius:10px; overflow:hidden; flex:none; }
 .seg button { padding:7px 13px; font-size:14.4px; font-weight:600; color:var(--ink-dim); background:transparent; border:none; cursor:pointer; }
 .seg button.act { background:linear-gradient(180deg,var(--accent-soft),var(--accent)); color:#241a08; }
-.modal-foot { display:flex; justify-content:space-between; align-items:center; margin-top:20px; }
+.modal-foot { display:flex; justify-content:space-between; align-items:center; margin-top:16px; }
 .btn.reset { background:transparent; color:var(--ink-dim); font-weight:600; }
 .foot-actions { display:flex; gap:10px; }
 
@@ -237,6 +260,8 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .helpmodal .tab { position:relative; padding:11px 16px 13px; font-size:14.5px; font-weight:600;
   color:var(--ink-faint); background:transparent; border:none; cursor:pointer; font-family:inherit; }
 .helpmodal .tab .ic { margin-right:7px; opacity:.85; }
+.helpmodal .tab .ic svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:2;
+  stroke-linecap:round; stroke-linejoin:round; vertical-align:-2px; }
 .helpmodal .tab.act { color:var(--accent-soft); }
 .helpmodal .tab.act::after { content:""; position:absolute; left:8px; right:8px; bottom:-1px; height:2.5px;
   border-radius:2px; background:linear-gradient(90deg, var(--accent-soft), var(--accent)); }
@@ -323,6 +348,11 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
   .gutter.near { order:3; }
   .gutter .legend, .gutter .spacer { display:none; }
   .gutter .status { flex:1 1 auto; }
+  /* compact stacked clock in the row layout */
+  .clock { padding:0; }
+  .clock-btn { width:auto; max-width:none; padding:6px 14px; gap:3px; border-radius:14px; }
+  .clock-ic { width:18px; height:18px; }
+  .clock-time { font-size:26px; }
   .gutter .controls { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:7px; margin-left:auto; }
   .gutter .controls .btn { padding:9px 11px; }
   .gutter .prompt { flex-basis:100%; order:5; }

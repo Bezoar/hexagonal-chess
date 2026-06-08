@@ -41,6 +41,13 @@
       <span class="chip"><span class="mk cap"></span>capture</span>
     </div>
     <div class="spacer"></div>
+    <div class="clock" data-bind="clock" hidden>
+      <button class="clock-btn" data-action="clock" data-seat="near" aria-label="Clock — tap to start">
+        <svg class="clock-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M12 13l3 2M9 2h6"/></svg>
+        <div class="clock-time" data-bind="clock-time">5:00</div>
+      </button>
+    </div>
+    <div class="spacer"></div>
     <div class="controls">
       <button class="btn" data-action="undo" data-seat="near">↩️ Undo</button>
       <button class="btn" data-action="draw" data-seat="near">🤝 Draw</button>
@@ -116,6 +123,11 @@
           <div class="seg" data-set="stalemateAsDraw"><button data-val="false">Gliński ¾–¼</button><button data-val="true">Draw</button></div></div>
         <div class="row"><div><div class="lab">Threefold repetition</div></div><div class="toggle" data-set="threefold"><div class="knob"></div></div></div>
         <div class="row"><div><div class="lab">50-move rule</div></div><div class="toggle" data-set="fiftyMove"><div class="knob"></div></div></div>
+        <div class="grp">Clock</div>
+        <div class="row"><div><div class="lab">Time control</div><div class="sub">A chess clock per player; applies to a new game. Tap your clock to start.</div></div>
+          <div class="seg" data-set="clockPreset"><button data-val="off">Off</button><button data-val="5+0">5 min</button><button data-val="10+0">10 min</button></div></div>
+        <div class="row"><div><div class="lab">End your turn by</div><div class="sub">Switch automatically when you move, or tap your own clock to end the turn.</div></div>
+          <div class="seg" data-set="clockHandoff"><button data-val="auto">Moving</button><button data-val="press">Clock tap</button></div></div>
         <div class="grp">Requests</div>
         <div class="row"><div><div class="lab">Request / Accept Draw</div></div><div class="toggle" data-set="requestDraw"><div class="knob"></div></div></div>
         <div class="row"><div><div class="lab">Request / Accept Undo</div></div><div class="toggle" data-set="requestUndo"><div class="knob"></div></div></div>
@@ -142,6 +154,7 @@
           <div class="tabs">
             <button class="tab act" data-help-tab="howto"><span class="ic">♟</span>How to play</button>
             <button class="tab" data-help-tab="controls"><span class="ic">⚙</span>Controls</button>
+            <button class="tab" data-help-tab="clock"><span class="ic"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M12 13l3 2M9 2h6"/></svg></span>Timed games</button>
           </div>
         </div>
 
@@ -296,6 +309,53 @@
               hex glows red when it's in check.</div>
           </div>
         </div>
+
+        <!-- TIMED GAMES -->
+        <div class="help-body panel" data-help-panel="clock" hidden>
+          <p class="lead">Off by default — Gliński's is untimed unless you add a chess clock. Turn
+            one on in <b>Settings</b> to play against the clock.</p>
+
+          <div class="sec">
+            <h3>Turning on a clock</h3>
+            <div class="dl">
+              <div>
+                <div class="dt"><span class="nm">Pick a time control</span>
+                  <span class="tag">Settings ▸ Clock</span></div>
+                <div class="dd">Choose <b>Off</b> or a time control — a <b>base time</b> per player,
+                  sometimes with an <b>increment</b> (a few seconds added back to your clock each move).
+                  It takes effect on the next new game.</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Starting the game</h3>
+            <p>With a clock set, the board waits until someone starts it. <b>Tap your own clock</b> to
+              begin: that picks <b>you as Black</b>, makes your opponent <b>White</b>, and starts
+              White's clock — White then makes the first move. (Just like a real chess clock, pressing
+              your side starts your opponent's time.)</p>
+          </div>
+
+          <div class="sec">
+            <h3>During play</h3>
+            <div class="ctrls">
+              <div class="ctrl"><div class="ico">⏱️</div><div><span class="nm">Your clock runs on your turn</span>
+                <div class="ds">The side to move has the highlighted clock; the other is dimmed.</div></div></div>
+              <div class="ctrl"><div class="ico">🔁</div><div><span class="nm">Ending your turn</span>
+                <div class="ds">By default, completing a move hands the clock to your opponent (with any increment). You can instead require a <b>clock tap</b> to end each turn — <span class="tag">Settings ▸ Clock</span></div></div></div>
+              <div class="ctrl"><div class="ico">🚫</div><div><span class="nm">No takebacks</span>
+                <div class="ds">Undo is unavailable while a time control is set.</div></div></div>
+            </div>
+          </div>
+
+          <div class="sec">
+            <h3>Running out of time</h3>
+            <p>If your clock reaches <b>zero</b> you <b>lose on time</b> — unless your opponent has no
+              way to checkmate you, in which case it's a <b>draw</b>.</p>
+            <div class="callout">In Gliński's hex chess even a single knight or bishop can mate, so a
+              timeout is only a draw when the other side is down to a <b>bare king</b>.</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -319,6 +379,13 @@
     <div class="legend">
       <span class="chip"><span class="mk move"></span>move</span>
       <span class="chip"><span class="mk cap"></span>capture</span>
+    </div>
+    <div class="spacer"></div>
+    <div class="clock" data-bind="clock" hidden>
+      <button class="clock-btn" data-action="clock" data-seat="far" aria-label="Clock — tap to start">
+        <svg class="clock-ic" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 13V8.5M12 13l3 2M9 2h6"/></svg>
+        <div class="clock-time" data-bind="clock-time">5:00</div>
+      </button>
     </div>
     <div class="spacer"></div>
     <div class="controls">
