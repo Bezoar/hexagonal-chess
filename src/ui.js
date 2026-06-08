@@ -15,10 +15,24 @@ const SEAT_LABEL = { near: 'Near', far: 'Far' };
 const DRAG_THRESHOLD = 8;
 
 // Time controls (ms). `clockPreset` in Settings selects one; null = untimed.
+// Keys are "base+increment" in minutes+seconds (chess clock notation).
 const CLOCK_PRESETS = {
   off: null,
   '5+0': { base: 5 * 60000, increment: 0 },
-  '10+0': { base: 10 * 60000, increment: 0 },
+  '3+2': { base: 3 * 60000, increment: 2000 },
+  '10+5': { base: 10 * 60000, increment: 5000 },
+  '90+30': { base: 90 * 60000, increment: 30000 },
+};
+
+// Stepped ranges for the custom builder (base minutes, increment seconds) — a
+// sensible spread from blitz to classical without a thousand taps.
+const CUSTOM_BASES = [1, 2, 3, 5, 10, 15, 20, 25, 30, 45, 60, 90, 120];
+const CUSTOM_INCS = [0, 1, 2, 3, 5, 10, 15, 20, 30, 60];
+// Step a value through its list by dir (±1), snapping an off-list value to the nearest first.
+const stepList = (list, val, dir) => {
+  let i = list.findIndex((v) => v >= val);
+  if (i < 0) i = list.length - 1;
+  return list[Math.max(0, Math.min(list.length - 1, i + dir))];
 };
 
 // Remaining ms -> "m:ss" (ceil so a clock reads 0:01 until it truly hits zero).
@@ -75,7 +89,13 @@ class App {
   }
 
   // The time control for a NEW game, from Settings (null = untimed).
-  _clockConfig() { return CLOCK_PRESETS[this.settings.clockPreset] || null; }
+  _clockConfig(s = this.settings) {
+    if (s.clockPreset === 'custom') {
+      const c = s.clockCustom || store.DEFAULT_SETTINGS.clockCustom;
+      return { base: c.base * 60000, increment: c.increment * 1000 };
+    }
+    return CLOCK_PRESETS[s.clockPreset] || null;
+  }
 
   _applyTheme() { this.app.dataset.theme = this.settings.theme; }
 
@@ -240,6 +260,7 @@ class App {
       case 'settings-save': this._saveSettings(); break;
       case 'settings-cancel': $('#settings').hidden = true; break;
       case 'settings-reset': this._draft = { ...store.DEFAULT_SETTINGS }; this._renderSettings(); break;
+      case 'clk-base': case 'clk-inc': this._stepCustom(action === 'clk-inc', Number(btn.dataset.dir)); break;
       default: break;
     }
   }
@@ -331,6 +352,23 @@ class App {
         b.classList.toggle('act', s[key] === v);
       });
     });
+    // Custom builder: reveal only when "Custom" is the chosen time control.
+    const cb = $('#clk-custom');
+    if (cb) {
+      cb.hidden = s.clockPreset !== 'custom';
+      const c = s.clockCustom || store.DEFAULT_SETTINGS.clockCustom;
+      $('#clk-base-val').textContent = `${c.base} min`;
+      $('#clk-inc-val').textContent = `+${c.increment} s`;
+    }
+  }
+
+  // Adjust the custom builder's base (minutes) or increment (seconds) by ±1 step.
+  _stepCustom(isInc, dir) {
+    const c = { ...(this._draft.clockCustom || store.DEFAULT_SETTINGS.clockCustom) };
+    if (isInc) c.increment = stepList(CUSTOM_INCS, c.increment, dir);
+    else c.base = stepList(CUSTOM_BASES, c.base, dir);
+    this._draft.clockCustom = c;
+    this._renderSettings();
   }
 
   _togglePick(t) {
@@ -349,7 +387,7 @@ class App {
   }
 
   _saveSettings() {
-    const prevPreset = this.settings.clockPreset;
+    const prevClock = JSON.stringify(this._clockConfig(this.settings));
     this.settings = { ...this._draft };
     store.saveSettings(this.settings);
     audio.setMuted(!this.settings.sound);
@@ -357,7 +395,7 @@ class App {
     this.game.rules = this.rules(); // apply to the running game
     // A changed time control applies to a fresh (unstarted) game right away, so you
     // can flip it on and play; an in-progress game keeps its clock until the next one.
-    if (this.settings.clockPreset !== prevPreset && !this.game.history.length && !this.game.result) {
+    if (JSON.stringify(this._clockConfig(this.settings)) !== prevClock && !this.game.history.length && !this.game.result) {
       this._stopTick();
       this.game = new Game(this.rules(), this._clockConfig());
       this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };

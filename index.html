@@ -124,8 +124,18 @@
         <div class="row"><div><div class="lab">Threefold repetition</div></div><div class="toggle" data-set="threefold"><div class="knob"></div></div></div>
         <div class="row"><div><div class="lab">50-move rule</div></div><div class="toggle" data-set="fiftyMove"><div class="knob"></div></div></div>
         <div class="grp">Clock</div>
-        <div class="row"><div><div class="lab">Time control</div><div class="sub">A chess clock per player; applies to a new game. Tap your clock to start.</div></div>
-          <div class="seg" data-set="clockPreset"><button data-val="off">Off</button><button data-val="5+0">5 min</button><button data-val="10+0">10 min</button></div></div>
+        <div class="row stack"><div><div class="lab">Time control</div><div class="sub">A chess clock per player; applies to a new game. Tap your clock to start. Format is base + increment.</div></div>
+          <div class="seg full" data-set="clockPreset"><button data-val="off">Off</button><button data-val="5+0">5+0</button><button data-val="3+2">3+2</button><button data-val="10+5">10+5</button><button data-val="90+30">90+30</button><button data-val="custom">Custom</button></div>
+          <div class="custombuild" id="clk-custom" hidden>
+            <div class="cb-field"><span class="cb-lab">Base</span>
+              <button class="cb-step" data-action="clk-base" data-dir="-1" aria-label="Less base time">−</button>
+              <span class="cb-val" id="clk-base-val">15 min</span>
+              <button class="cb-step" data-action="clk-base" data-dir="1" aria-label="More base time">+</button></div>
+            <div class="cb-field"><span class="cb-lab">Increment</span>
+              <button class="cb-step" data-action="clk-inc" data-dir="-1" aria-label="Less increment">−</button>
+              <span class="cb-val" id="clk-inc-val">+10 s</span>
+              <button class="cb-step" data-action="clk-inc" data-dir="1" aria-label="More increment">+</button></div>
+          </div></div>
         <div class="row"><div><div class="lab">End your turn by</div><div class="sub">Switch automatically when you move, or tap your own clock to end the turn.</div></div>
           <div class="seg" data-set="clockHandoff"><button data-val="auto">Moving</button><button data-val="press">Clock tap</button></div></div>
         <div class="grp">Requests</div>
@@ -321,9 +331,9 @@
               <div>
                 <div class="dt"><span class="nm">Pick a time control</span>
                   <span class="tag">Settings ▸ Clock</span></div>
-                <div class="dd">Choose <b>Off</b> or a time control — a <b>base time</b> per player,
-                  sometimes with an <b>increment</b> (a few seconds added back to your clock each move).
-                  It takes effect on the next new game.</div>
+                <div class="dd">Choose <b>Off</b>, a preset (5+0, 3+2, 10+5, 90+30), or <b>Custom</b> to dial in
+                  your own. A time control is a <b>base time</b> per player, sometimes with an <b>increment</b>
+                  (a few seconds added back to your clock each move). It takes effect on the next new game.</div>
               </div>
             </div>
           </div>

@@ -14,7 +14,8 @@ export const DEFAULT_SETTINGS = {
   theme: 'dark',
   coords: false,
   sound: true,
-  clockPreset: 'off', // 'off' | '5+0' | '10+0' (keys of CLOCK_PRESETS in ui.js)
+  clockPreset: 'off', // 'off' | a CLOCK_PRESETS key (ui.js) | 'custom' (uses clockCustom)
+  clockCustom: { base: 15, increment: 10 }, // custom builder: base minutes, increment seconds
   clockHandoff: 'auto', // 'auto' (switch on your move) | 'press' (tap your clock to end the turn)
 };
 
