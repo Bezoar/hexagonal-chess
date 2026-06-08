@@ -223,6 +223,19 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .seg { display:inline-flex; background:var(--bg-0); border:1px solid var(--panel-edge); border-radius:10px; overflow:hidden; flex:none; }
 .seg button { padding:7px 13px; font-size:14.4px; font-weight:600; color:var(--ink-dim); background:transparent; border:none; cursor:pointer; }
 .seg button.act { background:linear-gradient(180deg,var(--accent-soft),var(--accent)); color:#241a08; }
+/* A full-width segmented control that shares its width evenly (for the 6 clock presets). */
+.settings .row.stack { flex-direction:column; align-items:stretch; gap:8px; }
+.settings .row.stack .sub { max-width:none; }
+.seg.full { display:flex; }
+.seg.full button { flex:1 1 0; padding:7px 4px; text-align:center; }
+/* Custom time-control builder: two stepper fields revealed under the preset row. */
+.custombuild { display:flex; gap:10px; flex-wrap:wrap; }
+.custombuild[hidden] { display:none; } /* beat .custombuild's display:flex so [hidden] collapses */
+.cb-field { display:flex; align-items:center; gap:8px; flex:1 1 0; background:var(--bg-0); border:1px solid var(--panel-edge); border-radius:10px; padding:6px 10px; }
+.cb-lab { font-size:13px; color:var(--ink-faint); margin-right:auto; }
+.cb-val { font-variant-numeric:tabular-nums; font-weight:600; font-size:15px; min-width:54px; text-align:center; }
+.cb-step { width:28px; height:28px; border-radius:7px; border:1px solid var(--panel-edge); background:var(--panel); color:var(--ink); font-size:18px; line-height:1; cursor:pointer; flex:none; }
+.cb-step:active { background:var(--accent-soft); color:#241a08; }
 .modal-foot { display:flex; justify-content:space-between; align-items:center; margin-top:16px; }
 .btn.reset { background:transparent; color:var(--ink-dim); font-weight:600; }
 .foot-actions { display:flex; gap:10px; }
