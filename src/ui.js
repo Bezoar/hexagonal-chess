@@ -600,7 +600,8 @@ class App {
     // captured-pieces pop-out
     const pop = $('[data-bind="captured"]', g);
     if (this.ui.advExpanded === seat) {
-      const caps = this._capturedBy(seat).sort((a, b) => VALUE[b] - VALUE[a]).map((t) => GLYPHS[t]).join('');
+      // Each glyph is its own element so the .cap-row flex gap/wrapping applies per piece.
+      const caps = this._capturedBy(seat).sort((a, b) => VALUE[b] - VALUE[a]).map((t) => `<span>${GLYPHS[t]}</span>`).join('');
       pop.innerHTML = `<div class="cap-title">Captured${lead > 0 ? ` · +${lead}` : ''}</div>`
         + (caps ? `<div class="cap-row">${caps}</div>` : '<div class="cap-none">No captures yet</div>');
       pop.hidden = false;

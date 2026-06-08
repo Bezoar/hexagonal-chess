@@ -354,9 +354,8 @@ Goal: a smooth, tactile feel (mockup: `mockups/layout-v3.png`).
   - Tapping another own piece reselects; tapping empty/illegal deselects.
 - **Highlight style:** each legal target gets a **thick inset hex-border** in its
   cell — **blue = quiet move, red = capture** (the inset frames an occupied hex so
-  the enemy piece stays visible). **Color is backed by shape** for colorblind safety
-  (a filled inner dot for a quiet move vs a ring/frame for a capture), so meaning
-  never relies on hue alone.
+  the enemy piece stays visible). Both cues share the same hollow hex-ring shape and
+  are distinguished by color (blue vs red).
 - **Selection** shows an amber inset outline + faint amber fill on the source cell.
 - **Promotion** uses a dual-facing Q/R/B/N picker oriented to the promoting seat
   (mockup: `mockups/promotion.png`).
