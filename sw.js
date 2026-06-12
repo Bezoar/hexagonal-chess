@@ -1,10 +1,10 @@
 // sw.js — offline app shell for the static site.
 // Bump CACHE when shipping changes so clients pick up a fresh precache.
-const CACHE = 'hexchess-v38';
+const CACHE = 'hexchess-v39';
 const ASSETS = [
   './', './index.html', './styles.css', './manifest.webmanifest',
   './src/ui.js', './src/game.js', './src/rules.js', './src/hex.js', './src/match.js',
-  './src/render.js', './src/pieces.js', './src/storage.js', './src/audio.js', './src/clock.js',
+  './src/render.js', './src/pieces.js', './src/storage.js', './src/audio.js', './src/clock.js', './src/bot.js',
   './icons/icon-192.png', './icons/icon-512.png', './icons/apple-touch-icon.png',
 ];
 

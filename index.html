@@ -52,6 +52,7 @@
       <button class="btn" data-action="undo" data-seat="near">↩️ Undo</button>
       <button class="btn" data-action="draw" data-seat="near">🤝 Draw</button>
       <button class="btn" data-action="flip" data-seat="near">🔄 Flip</button>
+      <button class="btn" data-action="bot" data-seat="near">🤖 Bot</button>
       <button class="btn ghost" data-action="settings" data-seat="near">⚙️ Settings</button>
       <button class="btn danger" data-action="resign" data-seat="near">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="near">🔇 Mute</button>
@@ -80,6 +81,19 @@
           <button class="opt" data-action="promote" data-piece="B"><span class="g">♝</span><span class="n">Bishop</span></button>
           <button class="opt" data-action="promote" data-piece="N"><span class="g">♞</span><span class="n">Knight</span></button>
         </div>
+      </div>
+    </div>
+
+    <!-- bot: choose your colour (robot takes the far seat) -->
+    <div class="overlay botdlg" id="botdlg" hidden>
+      <div class="card">
+        <div class="ttl">Play the robot</div>
+        <div class="sub">The robot takes the far seat. Pick your colour — White moves first.</div>
+        <div class="opts">
+          <button class="opt" data-action="bot-color" data-color="white"><span class="g">♔</span><span class="n">White</span></button>
+          <button class="opt" data-action="bot-color" data-color="black"><span class="g">♚</span><span class="n">Black</span></button>
+        </div>
+        <button class="btn" data-action="bot-cancel">Cancel</button>
       </div>
     </div>
 
@@ -402,6 +416,7 @@
       <button class="btn" data-action="undo" data-seat="far">↩️ Undo</button>
       <button class="btn" data-action="draw" data-seat="far">🤝 Draw</button>
       <button class="btn" data-action="flip" data-seat="far">🔄 Flip</button>
+      <button class="btn" data-action="bot" data-seat="far">🤖 Bot</button>
       <button class="btn ghost" data-action="settings" data-seat="far">⚙️ Settings</button>
       <button class="btn danger" data-action="resign" data-seat="far">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="far">🔇 Mute</button>

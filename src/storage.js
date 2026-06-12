@@ -3,7 +3,7 @@
 // blocked/unavailable localStorage (private mode) degrades to in-memory defaults.
 
 const PREFIX = 'hexchess:';
-const KEYS = { settings: PREFIX + 'settings', match: PREFIX + 'match', game: PREFIX + 'game' };
+const KEYS = { settings: PREFIX + 'settings', match: PREFIX + 'match', game: PREFIX + 'game', bot: PREFIX + 'bot' };
 
 export const DEFAULT_SETTINGS = {
   stalemateAsDraw: false,
@@ -44,3 +44,8 @@ export const saveMatch = (m) => write(KEYS.match, m);
 
 export const loadGame = () => read(KEYS.game, null);
 export const saveGame = (g) => write(KEYS.game, g);
+
+// Bot opponent state for the live game ({ enabled, seat }); persisted so a
+// reload mid-bot-game keeps the far seat automated.
+export const loadBot = () => read(KEYS.bot, null);
+export const saveBot = (b) => write(KEYS.bot, b);

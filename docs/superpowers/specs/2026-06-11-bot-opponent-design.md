@@ -55,6 +55,14 @@ Note: Gliński scores stalemate ¾/¼ (it is **not** a draw), but the spike's
 material-only eval treats a stalemate node as neutral (0). That nuance is left
 to the post-spike eval work; it won't matter for casual depth-2 play.
 
+**Implementation note (perf):** detecting terminal nodes by generating full
+legal moves at *every* leaf made the opening position take ~2 s. Leaves now
+return the static material eval directly and terminal (mate/stalemate) detection
+runs only at depth ≥ 1 — where moves are generated for recursion anyway. That
+cut the opening to ~75 ms. Trade-off: the bot won't *see* a mate that lands
+exactly on the horizon leaf, but a mate it can deliver a ply earlier is still
+found. Acceptable for the spike; revisit (e.g. quiescence) if we go deeper.
+
 ### UI wiring (`src/ui.js`, `index.html`, `styles.css`)
 
 - **Robot button:** an additional `.btn` in each gutter's bottom `.controls`
