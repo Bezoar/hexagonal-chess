@@ -112,6 +112,10 @@ body {
 .clock.active .clock-time { color:var(--accent-soft); }
 .clock:not(.active):not(.armed) .clock-time { color:var(--ink-faint); } /* idle seat dimmed */
 .clock:not(.active):not(.armed) .clock-btn { opacity:.72; }
+/* low time (<10s scramble): red tenths, pulsing. The .gutter prefix lifts specificity
+   above the active/idle colour rules so red always wins. */
+.gutter .clock.low .clock-time { color:var(--capture); animation:lowpulse 1s ease-in-out infinite; }
+@keyframes lowpulse { 0%,100% { opacity:1; } 50% { opacity:.5; } }
 
 .controls { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
 .btn { font-size:14.4px; font-weight:600; color:var(--ink); background:var(--panel);
@@ -380,4 +384,5 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
   .app { transition:none; }
   .tgt { animation:none; opacity:.9; }
   .toggle .knob { transition:none; }
+  .gutter .clock.low .clock-time { animation:none; } /* keep the red, drop the pulse */
 }

@@ -34,6 +34,10 @@ export function play(kind) {
     case 'move': blip(440, 70); break;
     case 'capture': blip(220, 110, 0.06, 'triangle'); break;
     case 'check': blip(660, 90); setTimeout(() => blip(880, 110), 90); break;
+    // timed games: a single high blip when a clock first drops under 10s, and a
+    // distinct falling two-tone "flag drop" when a clock hits zero.
+    case 'lowtime': blip(990, 130, 0.06); break;
+    case 'flag': blip(330, 160, 0.07, 'sawtooth'); setTimeout(() => blip(165, 260, 0.07, 'sawtooth'), 140); break;
     default: break;
   }
 }

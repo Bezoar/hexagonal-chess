@@ -35,9 +35,15 @@ const stepList = (list, val, dir) => {
   return list[Math.max(0, Math.min(list.length - 1, i + dir))];
 };
 
-// Remaining ms -> "m:ss" (ceil so a clock reads 0:01 until it truly hits zero).
+// Below this a clock switches to a red tenths readout and the scramble beep fires.
+const LOW_TIME_MS = 10000;
+
+// Remaining ms -> readout. Under 10s it's "s.t" tenths (the scramble view, floored
+// so it ticks down); otherwise "m:ss" (ceil so a clock reads 0:01 until truly zero).
 const fmtClock = (ms) => {
-  const s = Math.ceil(Math.max(0, ms) / 1000);
+  const m = Math.max(0, ms);
+  if (m < LOW_TIME_MS) return (Math.floor(m / 100) / 10).toFixed(1);
+  const s = Math.ceil(m / 1000);
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
@@ -57,6 +63,7 @@ class App {
     this.drag = null;
     this.endHandled = false;
     this._tickId = null; // requestAnimationFrame id for the clock ticker
+    this._lowBeeped = { near: false, far: false }; // under-10s beep fired this scramble?
 
     this._loadGame();
     this._applyTheme();
@@ -288,6 +295,7 @@ class App {
   _newGame(resetMatch) {
     if (resetMatch) { this.match.reset(); store.saveMatch(this.match.serialize()); }
     this._stopTick();
+    this._lowBeeped = { near: false, far: false };
     this.game = new Game(this.rules(), this._clockConfig());
     this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     this.endHandled = false;
@@ -482,6 +490,7 @@ class App {
       const now = Date.now();
       const flagged = c.flagged(now);
       if (flagged) { this._onFlag(flagged); return; }
+      this._maybeLowBeep(c, now);
       this._renderClocks(now);
       this._tickId = requestAnimationFrame(frame);
     };
@@ -494,9 +503,18 @@ class App {
 
   _onFlag(seat) {
     this._stopTick();
+    audio.play('flag');
     this.game.flag(seat);
     this.updateAll();
     if (!this.endHandled) this._endGame();
+  }
+
+  // Beep once when the running seat first drops under 10s; re-arm if an increment
+  // lifts it back above the threshold so the next scramble beeps again.
+  _maybeLowBeep(c, now) {
+    const seat = c.running;
+    if (c.remaining(seat, now) >= LOW_TIME_MS) { this._lowBeeped[seat] = false; return; }
+    if (!this._lowBeeped[seat]) { this._lowBeeped[seat] = true; audio.play('lowtime'); }
   }
 
   // Update just the time readouts each frame (cheap; the heavy render is in updateAll).
@@ -505,7 +523,10 @@ class App {
     if (!c) return;
     for (const seat of ['near', 'far']) {
       const el = $('[data-bind="clock-time"]', this.gutters[seat]);
-      if (el) el.textContent = fmtClock(c.remaining(seat, now));
+      const rem = c.remaining(seat, now);
+      if (el) el.textContent = fmtClock(rem);
+      const clockEl = $('[data-bind="clock"]', this.gutters[seat]);
+      if (clockEl) clockEl.classList.toggle('low', rem < LOW_TIME_MS);
     }
   }
 
@@ -664,11 +685,13 @@ class App {
       const c = this.game.clock;
       clockEl.hidden = !c;
       if (c) {
-        set('clock-time', fmtClock(c.remaining(seat, Date.now())));
+        const rem = c.remaining(seat, Date.now());
+        set('clock-time', fmtClock(rem));
         const pregame = !this.game.whiteArmy && !r;
         const canPress = this.ui.awaitingPress === seat && !r; // press-handoff: this seat ends the turn
         clockEl.classList.toggle('armed', pregame || canPress); // tappable (brass)
         clockEl.classList.toggle('active', !r && c.running === seat && c.runningSince != null);
+        clockEl.classList.toggle('low', !r && rem < LOW_TIME_MS); // scramble: red tenths
         const btn = $('[data-action="clock"]', clockEl);
         if (btn) btn.disabled = !(pregame || canPress);
       }
