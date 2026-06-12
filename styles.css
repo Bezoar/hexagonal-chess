@@ -48,7 +48,9 @@ body {
 .seat-name { font-family:"Fraunces", serif; font-weight:600; font-size:20.7px; letter-spacing:.04em; }
 
 .score-card { position:relative; background:var(--panel); border:1px solid var(--panel-edge); border-radius:14px;
-  padding:11px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer; }
+  padding:11px 14px; display:flex; align-items:center; justify-content:space-between; cursor:pointer;
+  width:100%; font:inherit; color:inherit; text-align:left; } /* reset <button> native styling */
+.score-card:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
 
 /* captured-pieces pop-out (toggled by tapping the score card). Opens downward in
    landscape; in portrait it opens "upward" in local coords, which — thanks to the
