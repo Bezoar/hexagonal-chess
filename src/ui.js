@@ -729,12 +729,12 @@ class App {
   }
 }
 
-// A tablet is a touch device with no mouse hover; anything else (a desktop with a
-// mouse) gets a one-time, dismissible warning that this is a two-player tablet game.
+// Any touch-capable device counts as a tablet (including an iPad with a Magic
+// Keyboard / trackpad, which reports (hover: hover)); a device with no touch input
+// at all gets a one-time, dismissible warning that this is a two-player tablet game.
 function checkDevice() {
   const touch = (navigator.maxTouchPoints || 0) > 0 || 'ontouchstart' in window;
-  const noHover = window.matchMedia('(hover: none)').matches;
-  if (touch && noHover) return; // looks like a tablet — all good
+  if (touch) return; // looks like a tablet — all good
   let dismissed = false;
   try { dismissed = sessionStorage.getItem('dw-dismissed') === '1'; } catch { /* private mode */ }
   if (dismissed) return;
