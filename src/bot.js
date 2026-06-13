@@ -1,22 +1,14 @@
-// bot.js — a small automated opponent (feasibility spike).
+// bot.js — a small automated opponent and the search behind the hint layer.
 // Pure and DOM-free like the rest of the engine (ADR-0003): it consumes a
-// position `{ board, epTarget, epCapture }` and returns a move, with no UI or
-// game-state coupling. Depth-2 alpha-beta (negamax) over a material-only
-// evaluation — enough that it won't hand a queen back for a pawn, but no
-// positional understanding. See docs/superpowers/specs/2026-06-11-bot-opponent-design.md.
+// position `{ board, epTarget, epCapture }` and returns a move (and, for the
+// hint, the line it foresees). Depth-2 alpha-beta (negamax) over the named-term
+// evaluation in eval.js. See docs/superpowers/specs/2026-06-12-move-hints-design.md.
 
 import { allLegalMoves, applyMoveToBoard, cloneBoard, inCheck } from './rules.js';
 import { opponent, parseKey, key, add, pawnForward } from './hex.js';
+import { evaluate, VALUE } from './eval.js';
 
-const VALUE = { Q: 9, R: 5, B: 3, N: 3, P: 1, K: 0 };
 const MATE = 1e6; // dwarfs any material score, so mates dominate the search
-
-// Material balance from `army`'s point of view (positive = army is ahead).
-function evaluate(board, army) {
-  let score = 0;
-  for (const p of board.values()) score += (p.army === army ? 1 : -1) * VALUE[p.type];
-  return score;
-}
 
 // The position after `move`, including the next en-passant target. The pure
 // rules layer applies the move to a board but the ep bookkeeping lives in the
@@ -43,52 +35,88 @@ function order(board, moves) {
   moves.sort((a, b) => victim(b) - victim(a));
 }
 
-// Negamax with alpha-beta. Returns the value of `pos` for the side to move (army).
+// Negamax with alpha-beta. Returns { score, line } where `line` is the principal
+// variation (move objects) from this node for the side to move.
 function negamax(pos, army, depth, alpha, beta) {
-  // Leaf: static material only. We intentionally don't generate moves here just
-  // to detect a terminal node — that doubles work on the most numerous layer of
-  // the tree. The horizon trade-off: the bot won't *see* a mate that lands
-  // exactly at a leaf, but a mate it can deliver one ply earlier is found at the
-  // depth>=1 check below. Fine for the spike.
-  if (depth === 0) return evaluate(pos.board, army);
+  // Leaf: static eval only (no move generation just to detect terminals — that
+  // doubles work on the most numerous layer; see the spike's perf note).
+  if (depth === 0) return { score: evaluate(pos.board, army), line: [] };
   const moves = allLegalMoves(pos, army);
   if (moves.length === 0) {
-    // No legal move: checkmate (in check) is worst; stalemate is treated as
-    // neutral for the spike (Gliński actually scores it ¾/¼ — deferred).
-    // +depth makes a mate found sooner score worse, so the bot prefers the
+    // No legal move: checkmate (in check) is worst; stalemate is neutral for now
+    // (Gliński actually scores it 3/4-1/4 — deferred). +depth prefers the
     // quickest mate and the most delayed loss.
-    return inCheck(pos, army) ? -(MATE + depth) : 0;
+    return { score: inCheck(pos, army) ? -(MATE + depth) : 0, line: [] };
   }
   order(pos.board, moves);
   let best = -Infinity;
+  let bestLine = [];
   for (const m of moves) {
-    const score = -negamax(childPos(pos, m), opponent(army), depth - 1, -beta, -alpha);
-    if (score > best) best = score;
+    const child = negamax(childPos(pos, m), opponent(army), depth - 1, -beta, -alpha);
+    const sc = -child.score;
+    if (sc > best) { best = sc; bestLine = [m, ...child.line]; }
     if (best > alpha) alpha = best;
     if (alpha >= beta) break; // opponent won't allow this line
   }
-  return best;
+  return { score: best, line: bestLine };
 }
 
-// Choose a move for `army` in `pos`. Returns { from, to, promo } or null when
-// there are no legal moves. `opts.depth` (default 2) and `opts.rng` (default
-// Math.random, injected for deterministic tests) tune search and tie-breaking.
-export function chooseMove(pos, army, opts = {}) {
+// Full analysis for `army` in `pos`, or null when there are no legal moves.
+// Returns the chosen move (with its principal variation), the best alternative,
+// and the most "tempting" refuted capture — the hooks the hint layer narrates.
+// `opts.depth` (default 2) and `opts.rng` (default Math.random) tune search and
+// tie-breaking. The root uses a full window so every move gets an exact score.
+export function analyse(pos, army, opts = {}) {
   const depth = opts.depth ?? 2;
   const rng = opts.rng ?? Math.random;
   const moves = allLegalMoves(pos, army);
   if (moves.length === 0) return null;
   order(pos.board, moves);
 
-  // Root uses a full window so every move gets an exact score — that lets us
-  // collect all equal-best moves and pick among them at random for variety.
-  let bestScore = -Infinity;
-  let best = [];
+  const scored = [];
   for (const m of moves) {
-    const score = -negamax(childPos(pos, m), opponent(army), depth - 1, -Infinity, Infinity);
-    if (score > bestScore) { bestScore = score; best = [m]; }
-    else if (score === bestScore) best.push(m);
+    const child = negamax(childPos(pos, m), opponent(army), depth - 1, -Infinity, Infinity);
+    scored.push({ move: m, score: -child.score, line: [m, ...child.line] });
   }
-  const pick = best[Math.floor(rng() * best.length)];
-  return { from: pick.from, to: pick.to, promo: pick.isPromotion ? 'Q' : undefined };
+
+  // Best score, tie-broken at random (so the robot varies; tests inject rng).
+  let bestScore = -Infinity;
+  for (const s of scored) if (s.score > bestScore) bestScore = s.score;
+  const best = scored.filter((s) => s.score === bestScore);
+  const choice = best[Math.floor(rng() * best.length)];
+
+  // Best alternative move (highest-scoring move that isn't the chosen one).
+  let runnerUp = null;
+  for (const s of scored) {
+    if (s === choice) continue;
+    if (!runnerUp || s.score > runnerUp.score) runnerUp = s;
+  }
+
+  // Most tempting refuted capture: a meaningful grab (victim >= a minor piece)
+  // whose searched score is clearly worse than the suggestion. Drives the
+  // "looks tempting, but..." contrast line. null when no such trap exists.
+  let tempting = null;
+  for (const s of scored) {
+    if (s === choice || !s.move.captureKey) continue;
+    const victimPiece = pos.board.get(s.move.captureKey);
+    const victim = victimPiece ? VALUE[victimPiece.type] : 0;
+    if (victim < 3 || bestScore - s.score < 1) continue;
+    if (!tempting || victim > tempting.victim) tempting = { ...s, victim };
+  }
+
+  const pack = (s) => s && { move: { from: s.move.from, to: s.move.to, promo: s.move.isPromotion ? 'Q' : undefined }, score: s.score, pv: s.line };
+  return {
+    move: { from: choice.move.from, to: choice.move.to, promo: choice.move.isPromotion ? 'Q' : undefined },
+    score: choice.score,
+    pv: choice.line,
+    runnerUp: pack(runnerUp),
+    tempting: tempting && { ...pack(tempting), victim: tempting.victim, moveObj: tempting.move },
+  };
+}
+
+// Choose a move for `army` (the robot opponent). Thin wrapper over analyse so
+// the bot and the hint share one search. Returns { from, to, promo } or null.
+export function chooseMove(pos, army, opts = {}) {
+  const a = analyse(pos, army, opts);
+  return a && a.move;
 }
