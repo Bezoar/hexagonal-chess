@@ -7,6 +7,7 @@ import { Renderer } from './render.js';
 import * as store from './storage.js';
 import * as audio from './audio.js';
 import { opponent } from './hex.js';
+import { chooseMove } from './bot.js';
 
 const VALUE = { Q: 9, R: 5, B: 3, N: 3, P: 1, K: 0 };
 const GLYPHS = { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' };
@@ -38,6 +39,9 @@ const stepList = (list, val, dir) => {
 // Below this a clock switches to a red tenths readout and the scramble beep fires.
 const LOW_TIME_MS = 10000;
 
+// How long the bot "thinks" before its move lands, so the human sees it happen.
+const BOT_DELAY_MS = 500;
+
 // Remaining ms -> readout. Under 10s it's "s.t" tenths (the scramble view, floored
 // so it ticks down); otherwise "m:ss" (ceil so a clock reads 0:01 until truly zero).
 const fmtClock = (ms) => {
@@ -64,6 +68,7 @@ class App {
     this.endHandled = false;
     this._tickId = null; // requestAnimationFrame id for the clock ticker
     this._lowBeeped = { near: false, far: false }; // under-10s beep fired this scramble?
+    this._botTimer = null; // pending scheduled bot move
 
     this._loadGame();
     this._applyTheme();
@@ -72,6 +77,7 @@ class App {
     this._initFullscreen();
     this.updateAll();
     if (this.game.result) { this.endHandled = true; this._showEnd(); }
+    this._maybeBot(); // a game reloaded on the bot's turn should resume thinking
   }
 
   rules() {
@@ -89,6 +95,7 @@ class App {
     } catch {
       this.game = new Game(this.rules(), this._clockConfig());
     }
+    this.bot = store.loadBot() || { enabled: false, seat: 'far' };
     // A persisted game banks its clock paused (see updateAll); resume it on load so
     // the offline gap isn't counted against the player on the move.
     const c = this.game.clock;
@@ -212,6 +219,7 @@ class App {
     this._hidePrompts();
     this.updateAll();
     if (this.game.result && !this.endHandled) this._endGame();
+    this._maybeBot(); // if it's now the robot's turn, schedule its reply
   }
 
   _endGame() {
@@ -220,6 +228,43 @@ class App {
     store.saveMatch(this.match.serialize());
     this.updateAll();
     this._showEnd();
+  }
+
+  // ---- bot opponent (feasibility spike) ----
+  // The robot always plays the far seat. Tapping 🤖 Bot pre-game opens a colour
+  // picker; the human plays near. White moves first, so a human-Black game opens
+  // with the robot. Untimed only for now.
+  _openBotDialog(seat) {
+    const d = $('#botdlg');
+    d.classList.toggle('face-far', seat === 'far'); // orient to the tapping seat
+    d.hidden = false;
+  }
+
+  _startBot(humanColor) {
+    $('#botdlg').hidden = true;
+    this.bot = { enabled: true, seat: 'far' };
+    store.saveBot(this.bot);
+    this.updateAll(); // show the robot identity in the far gutter
+    if (humanColor === 'black') this._botMove(); // robot is White and opens
+  }
+
+  // Schedule a bot move when it's the robot's turn (never pre-game — a human-White
+  // game waits for the human's first move).
+  _maybeBot() {
+    if (!this.bot.enabled || this.game.result || this.ui.pendingPromo) return;
+    if (this.game.toMove !== this.bot.seat) return;
+    clearTimeout(this._botTimer);
+    this._botTimer = setTimeout(() => this._botMove(), BOT_DELAY_MS);
+  }
+
+  _botMove() {
+    this._botTimer = null;
+    if (!this.bot.enabled || this.game.result) return;
+    if (!this.game.selectable().includes(this.bot.seat)) return; // also allows the pre-game opener
+    const m = chooseMove(this.game.pos(), this.bot.seat);
+    if (!m) return;
+    const rec = this.game.move(m.from, m.to, m.promo);
+    if (rec && !rec.needsPromotion) this._postMove(rec);
   }
 
   // ---- promotion ----
@@ -270,6 +315,9 @@ class App {
       case 'undo-request': this._requestUndo(); break;
       case 'settings-save': this._saveSettings(); break;
       case 'settings-cancel': $('#settings').hidden = true; break;
+      case 'bot': this._openBotDialog(seat); break;
+      case 'bot-color': this._startBot(btn.dataset.color); break;
+      case 'bot-cancel': $('#botdlg').hidden = true; break;
       case 'settings-reset': this._draft = { ...store.DEFAULT_SETTINGS }; this._renderSettings(); break;
       case 'clk-base': case 'clk-inc': this._stepCustom(action === 'clk-inc', Number(btn.dataset.dir)); break;
       default: break;
@@ -296,6 +344,9 @@ class App {
     if (resetMatch) { this.match.reset(); store.saveMatch(this.match.serialize()); }
     this._stopTick();
     this._lowBeeped = { near: false, far: false };
+    clearTimeout(this._botTimer); this._botTimer = null;
+    this.bot = { enabled: false, seat: 'far' }; // New Game returns to human-vs-human; re-tap 🤖 for the robot
+    store.saveBot(this.bot);
     this.game = new Game(this.rules(), this._clockConfig());
     this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
     this.endHandled = false;
@@ -610,8 +661,11 @@ class App {
     const set = (bind, val) => { const e = $(`[data-bind="${bind}"]`, g); if (e) e.textContent = val; };
 
     // Header is the fixed seat identity ("Near seat"/"Far seat"); the role
-    // (White/Black) is carried by the status box, so we don't echo it here.
-    set('name', `${SEAT_LABEL[seat]} seat`);
+    // (White/Black) is carried by the status box, so we don't echo it here. When
+    // the robot holds a seat it's labelled "Robot" (thinking… on its turn).
+    const isBot = this.bot.enabled && seat === this.bot.seat;
+    const botThinking = isBot && !this.game.result && !!this.game.whiteArmy && this.game.toMove === this.bot.seat;
+    set('name', isBot ? (botThinking ? 'Robot · thinking…' : 'Robot') : `${SEAT_LABEL[seat]} seat`);
     set('score', formatScore(this.match[seat]));
 
     const mat = this._material();
@@ -675,6 +729,7 @@ class App {
     const dis = (action, cond) => { const b = $(`[data-action="${action}"][data-seat="${seat}"]`, g); if (b) b.disabled = cond; };
     dis('undo', over || !this.game.history.length || !this.settings.requestUndo || !!this.game.clock);
     dis('draw', over || this.game.toMove !== seat || !this.settings.requestDraw);
+    dis('bot', whiteSet || over); // robot is chosen pre-game only
     dis('resign', over || !whiteSet);
     $(`[data-action="mute"][data-seat="${seat}"]`, g).classList.toggle('on', !this.settings.sound);
 
