@@ -207,8 +207,8 @@ class App {
       if (this.settings.clockHandoff === 'press') this.ui.awaitingPress = this.game.clock.running;
       else this.game.clock.switchTurn(Date.now());
     }
-    this.ui.selected = null; this.ui.targets = []; this.ui.request = null; this.ui.hint = null;
-    $('#hintcard').hidden = true;
+    this.ui.selected = null; this.ui.targets = []; this.ui.request = null;
+    this._clearHint();
     if (rec.from) {
       this._pendingAnim = {
         from: rec.from, to: rec.to, faceFar: rec.army === 'far', isKnight: rec.pieceType === 'N',
@@ -244,6 +244,7 @@ class App {
 
   _startBot(humanColor) {
     $('#botdlg').hidden = true;
+    this._clearHint(); // defensive: starting a bot game clears any open hint
     this.bot = { enabled: true, seat: 'far' };
     store.saveBot(this.bot);
     this.updateAll(); // show the robot identity in the far gutter
@@ -305,9 +306,13 @@ class App {
   }
 
   _closeHint() {
-    $('#hintcard').hidden = true;
-    this.ui.hint = null;
+    this._clearHint();
     this._drawBoard();
+  }
+
+  _clearHint() {
+    this.ui.hint = null;
+    $('#hintcard').hidden = true;
   }
 
   // ---- promotion ----
@@ -372,6 +377,7 @@ class App {
   _accept(seat) {
     const r = this.ui.request;
     if (!r || r.by === seat) return; // only the opponent accepts
+    this._clearHint(); // accepting an undo/draw must not leave a stale hint card
     if (r.kind === 'draw') {
       this.game.agreeDraw();
       this.ui.request = null; this._hidePrompts();
@@ -396,6 +402,7 @@ class App {
     this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null, hint: null };
     this.endHandled = false;
     $('#endcard').hidden = true;
+    this._clearHint();
     this.updateAll();
   }
 
@@ -508,6 +515,7 @@ class App {
       this.game = new Game(this.rules(), this._clockConfig());
       this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null, hint: null };
     }
+    this._clearHint();
     $('#settings').hidden = true;
     this.updateAll();
   }
@@ -840,7 +848,7 @@ class App {
   }
 
   _hidePrompts() { $$('[data-bind="prompt"]').forEach((p) => (p.hidden = true)); }
-  _anyOverlay() { return !$('#settings').hidden || !$('#undo').hidden || !$('#endcard').hidden || !$('#help').hidden; }
+  _anyOverlay() { return !$('#settings').hidden || !$('#undo').hidden || !$('#endcard').hidden || !$('#help').hidden || !$('#hintcard').hidden; }
 
   _showEnd() {
     const r = this.game.result;
