@@ -8,8 +8,8 @@ import { parseKey } from './hex.js';
 
 export const VALUE = { Q: 9, R: 5, B: 3, N: 3, P: 1, K: 0 };
 
-// Centre weight: deliberately tiny so no centralisation sum can overturn a whole
-// pawn of material — it only breaks ties between otherwise-equal moves.
+// Centre weight: tiny so a single piece's centralisation advantage (max 0.10) can
+// never overturn a pawn — it only breaks ties between otherwise-equal moves.
 const CENTRE_W = 0.02;
 
 // Hex-ring distance from the centre cell (0 at the centre, 5 at the edge). With
