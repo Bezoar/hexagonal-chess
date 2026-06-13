@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { chooseMove } from '../src/bot.js';
+import { chooseMove, analyse } from '../src/bot.js';
 import { startingBoard } from '../src/game.js';
 import { allLegalMoves, inCheck } from '../src/rules.js';
 import { key, squareToCube, ORTHO, isOnBoard } from '../src/hex.js';
@@ -93,4 +93,30 @@ test('returns null when the side has no legal moves', () => {
   const b = new Map();
   placeXY(b, 3, 1, 'K', 'far'); // only the far army is on the board
   assert.equal(chooseMove(pos(b), 'near', det), null);
+});
+
+test('analyse returns a principal variation starting with the chosen move', () => {
+  const b = new Map();
+  placeXY(b, 0, 0, 'R', 'near');
+  placeXY(b, -3, -2, 'K', 'near');
+  placeXY(b, 3, 1, 'K', 'far');
+  const knightCell = neighbour(0);
+  b.set(knightCell, { type: 'N', army: 'far' }); // free knight next to the rook
+  assertNoCheck(b);
+
+  const a = analyse(pos(b), 'near', det);
+  assert.ok(a, 'should return an analysis');
+  assert.equal(a.move.from, CENTRE);
+  assert.equal(a.move.to, knightCell, 'best move is the free capture');
+  assert.ok(Array.isArray(a.pv) && a.pv.length >= 1, 'pv is a non-empty move list');
+  assert.equal(a.pv[0].from, a.move.from, 'pv leads with the chosen move');
+  assert.equal(a.pv[0].to, a.move.to);
+  assert.ok(a.runnerUp, 'a non-capturing alternative exists');
+  assert.ok(a.runnerUp.score <= a.score, 'the chosen move is at least as good as the runner-up');
+});
+
+test('analyse returns null when the side has no legal moves', () => {
+  const b = new Map();
+  placeXY(b, 3, 1, 'K', 'far');
+  assert.equal(analyse(pos(b), 'near', det), null);
 });
