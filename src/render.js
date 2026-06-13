@@ -34,10 +34,10 @@ export class Renderer {
     this.center = new Map(); // cellKey -> [cx, cy]
     this._buildStatic();
     this.layers = {
-      lastmove: el('g'), check: el('g'), targets: el('g'),
+      lastmove: el('g'), hint: el('g'), check: el('g'), targets: el('g'),
       selection: el('g'), coords: el('g'), pieces: el('g'),
     };
-    for (const k of ['lastmove', 'check', 'targets', 'selection', 'coords', 'pieces']) {
+    for (const k of ['lastmove', 'hint', 'check', 'targets', 'selection', 'coords', 'pieces']) {
       this.svg.appendChild(this.layers[k]);
     }
   }
@@ -65,7 +65,7 @@ export class Renderer {
   // `ui.animate` (optional) glides the moving piece for one render:
   //   { from, to, faceFar, isKnight, captureKey, capturedPiece:{type,army,role} }
   draw(game, ui = {}) {
-    const { selected = null, targets = [], showCoords = false, animate = null } = ui;
+    const { selected = null, targets = [], showCoords = false, animate = null, hint = null } = ui;
     this._clear();
 
     // last-move trail
@@ -117,6 +117,14 @@ export class Renderer {
       const [cx, cy] = this.center.get(m.to);
       const cls = m.capture ? 'tgt cap' : 'tgt move';
       this.layers.targets.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.8), class: cls }));
+    }
+
+    // suggested-move hint (teaching layer): outline the from and to cells.
+    if (hint && this.center.has(hint.from) && this.center.has(hint.to)) {
+      for (const [k, cls] of [[hint.from, 'hint from'], [hint.to, 'hint to']]) {
+        const [cx, cy] = this.center.get(k);
+        this.layers.hint.appendChild(el('polygon', { points: hexPoints(cx, cy, SIZE * 0.86), class: cls }));
+      }
     }
 
     // pieces
