@@ -14,7 +14,10 @@ const NAME = { K: 'king', Q: 'queen', R: 'rook', B: 'bishop', N: 'knight', P: 'p
 const hanging = (board, side, k) =>
   isAttacked(board, k, opponent(side)) && !isAttacked(board, k, side);
 
-// Keys+types of `side`'s hanging non-king pieces on `board`.
+// Keys+types of `side`'s hanging non-king pieces on `board`. Callers match the
+// resulting savedType/threatType by piece TYPE, so the signal is loose when two
+// pieces share a type (e.g. one rook saved while another stays hung) — accepted
+// imprecision for a teaching hint, never a wrong sign.
 function hangingKeys(board, side) {
   const out = [];
   for (const [k, p] of board) {
@@ -36,6 +39,7 @@ const afterLine = (board, line) => {
 };
 
 export function explain(pos, army, analysis, farWhite) {
+  if (!analysis || !analysis.pv || !analysis.pv.length) throw new Error('explain: analysis must have a non-empty pv');
   const sq = (k) => cubeToSquareOriented(...parseKey(k), farWhite);
   const label = (m) => `${sq(m.from)}→${sq(m.to)}`;
   const move = analysis.pv[0];                 // full chosen move object
@@ -68,12 +72,16 @@ export function explain(pos, army, analysis, farWhite) {
     .map(([, t]) => t)
     .find((t) => !enemyHangingBefore.has(t)) || null;
 
-  const centreUp = evaluateTerms(afterMove, army).centre > evaluateTerms(pos.board, army).centre;
+  // Only a non-capturing move can honestly "develop toward the centre": a capture
+  // also raises the net centre term just by removing the enemy piece. (captureKey
+  // is set for en passant too, so those are covered.)
+  const centreUp = !move.captureKey && evaluateTerms(afterMove, army).centre > evaluateTerms(pos.board, army).centre;
 
   // --- lead (the single dominant reason) ---------------------------------
   let lead;
   let used = '';
   if (isMate) { lead = 'Checkmate — this ends the game.'; used = 'mate'; }
+  else if (move.isPromotion) { lead = 'Promotes a pawn to a queen.'; used = 'promo'; }
   else if (winsType) { lead = `Wins a ${NAME[winsType]}.`; used = 'wins'; }
   else if (savedType) { lead = `Saves your ${NAME[savedType]} from capture.`; used = 'saves'; }
   else if (threatType) { lead = `Threatens to win their ${NAME[threatType]}.`; used = 'threat'; }
@@ -93,9 +101,11 @@ export function explain(pos, army, analysis, farWhite) {
   if (analysis.tempting) {
     const t = analysis.tempting;
     const victimType = (pos.board.get(t.moveObj.captureKey) || {}).type;
-    const reply = t.pv[1] ? label(t.pv[1]) : null;
-    contrast = `Grabbing the ${NAME[victimType]} on ${sq(t.move.to)} is tempting, but `
-      + (reply ? `${reply} ` : 'the reply ') + 'refutes it.';
+    if (victimType) {
+      const reply = t.pv[1] ? label(t.pv[1]) : null;
+      contrast = `Grabbing the ${NAME[victimType]} on ${sq(t.move.to)} is tempting, but `
+        + (reply ? `${reply} ` : 'the reply ') + 'refutes it.';
+    }
   }
 
   return { moveLabel: label(move), lead, reasons, contrast };

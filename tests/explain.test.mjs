@@ -2,13 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { analyse } from '../src/bot.js';
 import { explain } from '../src/explain.js';
-import { key, ORTHO, isOnBoard } from '../src/hex.js';
+import { key, ORTHO } from '../src/hex.js';
 import { inCheck } from '../src/rules.js';
 
 const pos = (board) => ({ board, epTarget: null, epCapture: null });
 const placeXY = (b, x, y, type, army) => b.set(key(x, y), { type, army });
 const det = { rng: () => 0 };
-const CENTRE = key(0, 0);
 const neighbour = (i) => key(ORTHO[i][0], ORTHO[i][1]);
 const assertNoCheck = (b) => assert.ok(!inCheck(pos(b), 'near') && !inCheck(pos(b), 'far'), 'setup: neither king in check');
 
@@ -64,4 +63,14 @@ test('a tempting but refuted grab produces a contrast line', () => {
   const r = hintFor(b, 'near');
   assert.ok(r.contrast, 'should warn about the refuted capture');
   assert.match(r.contrast, /knight/, 'names the tempting victim');
+});
+
+test('a promotion leads with "Promotes a pawn to a queen"', () => {
+  const b = new Map();
+  placeXY(b, 0, 4, 'P', 'near');   // one step from promoting at (0,5)
+  placeXY(b, -3, -2, 'K', 'near');
+  placeXY(b, 3, 1, 'K', 'far');
+  assertNoCheck(b);
+  const r = hintFor(b, 'near');
+  assert.equal(r.lead, 'Promotes a pawn to a queen.');
 });
