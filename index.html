@@ -52,7 +52,7 @@
       <button class="btn" data-action="undo" data-seat="near">↩️ Undo</button>
       <button class="btn" data-action="draw" data-seat="near">🤝 Draw</button>
       <button class="btn" data-action="flip" data-seat="near">🔄 Flip</button>
-      <button class="btn" data-action="bot" data-seat="near">🤖 Bot</button>
+      <button class="btn botslot" data-action="bot" data-seat="near">🤖 Bot</button>
       <button class="btn ghost" data-action="settings" data-seat="near">⚙️ Settings</button>
       <button class="btn danger" data-action="resign" data-seat="near">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="near">🔇 Mute</button>
@@ -94,6 +94,18 @@
           <button class="opt" data-action="bot-color" data-color="black"><span class="g">♚</span><span class="n">Black</span></button>
         </div>
         <button class="btn" data-action="bot-cancel">Cancel</button>
+      </div>
+    </div>
+
+    <!-- hint: suggested move + teaching rationale -->
+    <div class="overlay hintcard" id="hintcard" hidden>
+      <div class="card">
+        <div class="ttl">Suggested move</div>
+        <div class="movelabel" data-bind="hint-move"></div>
+        <div class="lead" data-bind="hint-lead"></div>
+        <ul class="reasons" data-bind="hint-reasons"></ul>
+        <div class="contrast" data-bind="hint-contrast" hidden></div>
+        <button class="btn primary" data-action="hint-close">Got it</button>
       </div>
     </div>
 
@@ -416,7 +428,7 @@
       <button class="btn" data-action="undo" data-seat="far">↩️ Undo</button>
       <button class="btn" data-action="draw" data-seat="far">🤝 Draw</button>
       <button class="btn" data-action="flip" data-seat="far">🔄 Flip</button>
-      <button class="btn" data-action="bot" data-seat="far">🤖 Bot</button>
+      <button class="btn botslot" data-action="bot" data-seat="far">🤖 Bot</button>
       <button class="btn ghost" data-action="settings" data-seat="far">⚙️ Settings</button>
       <button class="btn danger" data-action="resign" data-seat="far">🏳️ Resign</button>
       <button class="btn mute" data-action="mute" data-seat="far">🔇 Mute</button>
