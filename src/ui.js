@@ -7,7 +7,8 @@ import { Renderer } from './render.js';
 import * as store from './storage.js';
 import * as audio from './audio.js';
 import { opponent } from './hex.js';
-import { chooseMove } from './bot.js';
+import { chooseMove, analyse } from './bot.js';
+import { explain } from './explain.js';
 
 const VALUE = { Q: 9, R: 5, B: 3, N: 3, P: 1, K: 0 };
 const GLYPHS = { K: '♚', Q: '♛', R: '♜', B: '♝', N: '♞', P: '♟' };
@@ -63,7 +64,7 @@ class App {
     this.gutters = { near: $('.gutter.near'), far: $('.gutter.far') };
     this.flipped = false;
 
-    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
+    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null, hint: null };
     this.drag = null;
     this.endHandled = false;
     this._tickId = null; // requestAnimationFrame id for the clock ticker
@@ -206,7 +207,8 @@ class App {
       if (this.settings.clockHandoff === 'press') this.ui.awaitingPress = this.game.clock.running;
       else this.game.clock.switchTurn(Date.now());
     }
-    this.ui.selected = null; this.ui.targets = []; this.ui.request = null;
+    this.ui.selected = null; this.ui.targets = []; this.ui.request = null; this.ui.hint = null;
+    $('#hintcard').hidden = true;
     if (rec.from) {
       this._pendingAnim = {
         from: rec.from, to: rec.to, faceFar: rec.army === 'far', isKnight: rec.pieceType === 'N',
@@ -267,6 +269,47 @@ class App {
     if (rec && !rec.needsPromotion) this._postMove(rec);
   }
 
+  // ---- move hints (teaching layer) ----
+  // Suggest the side-to-move human's best move and explain why. Untimed games
+  // only, never for a seat the robot holds. Reuses the bot search (analyse) and
+  // the explain layer; it never moves for you — you read it and play it yourself.
+  _showHint(seat) {
+    if (!this.game.whiteArmy || this.game.result || this.game.clock) return;
+    if (this.game.toMove !== seat || this.ui.pendingPromo) return;
+    if (this.bot.enabled && seat === this.bot.seat) return;
+    const analysis = analyse(this.game.pos(), seat);
+    if (!analysis) return;
+    const farWhite = this.game.whiteArmy === 'far';
+    const r = explain(this.game.pos(), seat, analysis, farWhite);
+    this.ui.hint = { from: analysis.move.from, to: analysis.move.to };
+    this._drawBoard();
+    this._renderHintCard(r, seat);
+  }
+
+  _renderHintCard(r, seat) {
+    const card = $('#hintcard');
+    $('[data-bind="hint-move"]', card).textContent = r.moveLabel;
+    $('[data-bind="hint-lead"]', card).textContent = r.lead;
+    const list = $('[data-bind="hint-reasons"]', card);
+    list.replaceChildren();
+    for (const reason of r.reasons) {
+      const li = document.createElement('li');
+      li.textContent = reason;
+      list.appendChild(li);
+    }
+    const contrast = $('[data-bind="hint-contrast"]', card);
+    contrast.textContent = r.contrast || '';
+    contrast.hidden = !r.contrast;
+    card.classList.toggle('face-far', seat === 'far'); // orient to the asking seat
+    card.hidden = false;
+  }
+
+  _closeHint() {
+    $('#hintcard').hidden = true;
+    this.ui.hint = null;
+    this._drawBoard();
+  }
+
   // ---- promotion ----
   _openPromo(from, to) {
     this.ui.pendingPromo = { from, to };
@@ -318,6 +361,8 @@ class App {
       case 'bot': this._openBotDialog(seat); break;
       case 'bot-color': this._startBot(btn.dataset.color); break;
       case 'bot-cancel': $('#botdlg').hidden = true; break;
+      case 'hint': this._showHint(seat); break;
+      case 'hint-close': this._closeHint(); break;
       case 'settings-reset': this._draft = { ...store.DEFAULT_SETTINGS }; this._renderSettings(); break;
       case 'clk-base': case 'clk-inc': this._stepCustom(action === 'clk-inc', Number(btn.dataset.dir)); break;
       default: break;
@@ -348,7 +393,7 @@ class App {
     this.bot = { enabled: false, seat: 'far' }; // New Game returns to human-vs-human; re-tap 🤖 for the robot
     store.saveBot(this.bot);
     this.game = new Game(this.rules(), this._clockConfig());
-    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
+    this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null, hint: null };
     this.endHandled = false;
     $('#endcard').hidden = true;
     this.updateAll();
@@ -461,7 +506,7 @@ class App {
     if (JSON.stringify(this._clockConfig(this.settings)) !== prevClock && !this.game.history.length && !this.game.result) {
       this._stopTick();
       this.game = new Game(this.rules(), this._clockConfig());
-      this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null };
+      this.ui = { selected: null, targets: [], pendingPromo: null, request: null, undoKeep: 0, advExpanded: null, awaitingPress: null, hint: null };
     }
     $('#settings').hidden = true;
     this.updateAll();
@@ -625,7 +670,7 @@ class App {
   _drawBoard() {
     this.renderer.draw(this.game, {
       selected: this.ui.selected, targets: this.ui.targets, showCoords: this.settings.coords,
-      animate: this._pendingAnim || null,
+      animate: this._pendingAnim || null, hint: this.ui.hint || null,
     });
     this._pendingAnim = null; // animate only the render right after a move
   }
@@ -729,7 +774,25 @@ class App {
     const dis = (action, cond) => { const b = $(`[data-action="${action}"][data-seat="${seat}"]`, g); if (b) b.disabled = cond; };
     dis('undo', over || !this.game.history.length || !this.settings.requestUndo || !!this.game.clock);
     dis('draw', over || this.game.toMove !== seat || !this.settings.requestDraw);
-    dis('bot', whiteSet || over); // robot is chosen pre-game only
+    // Bot/Hint slot: pre-game it opens the robot picker; once a game is underway
+    // it becomes the Hint button for a human seat (untimed only; hidden on the
+    // robot's own seat). data-action is toggled, so we find it by .botslot class.
+    const slot = $(`.botslot[data-seat="${seat}"]`, g);
+    if (slot) {
+      const isBotSeat = this.bot.enabled && seat === this.bot.seat;
+      if (!whiteSet) {
+        slot.dataset.action = 'bot';
+        slot.textContent = '🤖 Bot';
+        slot.hidden = false;
+        slot.disabled = over;
+      } else {
+        slot.dataset.action = 'hint';
+        slot.textContent = '💡 Hint';
+        slot.hidden = isBotSeat; // don't coach the robot
+        slot.disabled = over || !!this.game.clock || isBotSeat
+          || this.game.toMove !== seat || !!this.ui.pendingPromo;
+      }
+    }
     dis('resign', over || !whiteSet);
     $(`[data-action="mute"][data-seat="${seat}"]`, g).classList.toggle('on', !this.settings.sound);
 
