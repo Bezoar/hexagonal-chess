@@ -105,6 +105,9 @@ export function analyse(pos, army, opts = {}) {
   }
 
   const pack = (s) => s && { move: { from: s.move.from, to: s.move.to, promo: s.move.isPromotion ? 'Q' : undefined }, score: s.score, pv: s.line };
+  // Note: `move`/`runnerUp.move`/`tempting.move` are packed {from,to,promo}; `pv`
+  // elements and `tempting.moveObj` are full rules-layer move objects (the hint
+  // layer reads captureKey/isPromotion off them).
   return {
     move: { from: choice.move.from, to: choice.move.to, promo: choice.move.isPromotion ? 'Q' : undefined },
     score: choice.score,

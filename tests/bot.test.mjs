@@ -111,6 +111,8 @@ test('analyse returns a principal variation starting with the chosen move', () =
   assert.ok(Array.isArray(a.pv) && a.pv.length >= 1, 'pv is a non-empty move list');
   assert.equal(a.pv[0].from, a.move.from, 'pv leads with the chosen move');
   assert.equal(a.pv[0].to, a.move.to);
+  assert.ok(a.runnerUp, 'a non-capturing alternative exists');
+  assert.ok(a.runnerUp.score <= a.score, 'the chosen move is at least as good as the runner-up');
 });
 
 test('analyse returns null when the side has no legal moves', () => {
