@@ -161,6 +161,11 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 @keyframes pulse { 0%,100% { opacity:.4; } 50% { opacity:1; } }
 .tgt { animation:pulse 1.5s ease-in-out infinite; }
 
+/* suggested-move hint outline (teaching layer) */
+.hint { fill:none; stroke:var(--accent-soft); stroke-width:5.5; stroke-linejoin:round; pointer-events:none; }
+.hint.from { opacity:.5; stroke-dasharray:7 5; }
+.hint.to { opacity:.95; }
+
 .piece { pointer-events:none; }
 .piece.gliding { transition:transform .2s cubic-bezier(.4,0,.2,1); }
 .piece.knight-hop .piece-glyph { animation:knight-hop .22s ease; }
@@ -194,6 +199,19 @@ svg.board { position:absolute; top:10px; left:10px; width:calc(100% - 20px); hei
 .promo .opt .n, .botdlg .opt .n { font-size:11.5px; color:var(--ink-dim); letter-spacing:.08em; text-transform:uppercase; }
 .botdlg .sub { font-size:12.6px; color:var(--ink-faint); max-width:240px; text-align:center; margin-top:-3px; }
 .botdlg .btn { margin-top:3px; }
+
+/* hint reasons card */
+.hintcard .card { padding:15px 18px; display:flex; flex-direction:column; align-items:stretch; gap:9px; width:280px; }
+.hintcard.face-far .card { transform:rotate(180deg); }
+.hintcard .ttl { font-family:"Fraunces",serif; font-weight:600; color:var(--accent-soft); text-align:center; }
+.hintcard .movelabel { font-family:"Fraunces",serif; font-size:24px; font-weight:600; color:var(--ink); text-align:center;
+  font-variant-numeric:tabular-nums; }
+.hintcard .lead { font-size:14.4px; color:var(--ink); line-height:1.3; }
+.hintcard .reasons { margin:0; padding-left:18px; display:flex; flex-direction:column; gap:4px; }
+.hintcard .reasons:empty { display:none; }
+.hintcard .reasons li { font-size:12.8px; color:var(--ink-dim); line-height:1.3; }
+.hintcard .contrast { font-size:12.6px; color:var(--ink-faint); line-height:1.3; border-top:1px solid var(--panel-edge); padding-top:8px; }
+.hintcard .btn { margin-top:3px; }
 
 /* game over — dual-facing card */
 .endcard .card { width:300px; overflow:hidden; }
